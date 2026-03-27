@@ -54,9 +54,18 @@ QE_YOLO_IOU=0.5
 QE_YOLO_IMGSZ=640
 QE_CAMERA_SOURCE=webcam
 QE_CAMERA_INDEX=0
+QE_CAMERA_VIDEO_PATH=
 QE_CAMERA_WIDTH=1280
 QE_CAMERA_HEIGHT=720
 QE_CAMERA_FPS=10
+QE_DATABASE_URL=sqlite:///data/queue.db
+```
+
+Use local video file as input (development/testing):
+
+```env
+QE_CAMERA_SOURCE=video
+QE_CAMERA_VIDEO_PATH=D:/path/to/queue_sample.mp4
 QE_DATABASE_URL=sqlite:///data/queue.db
 ```
 

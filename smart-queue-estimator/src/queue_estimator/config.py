@@ -22,8 +22,9 @@ class Settings(BaseSettings):
     model_dir: Path = Path("models")
 
     # Camera
-    camera_source: Literal["picamera", "webcam"] = "webcam"
+    camera_source: Literal["picamera", "webcam", "video"] = "webcam"
     camera_index: int = 0
+    camera_video_path: str | None = None
     camera_width: int = 1280
     camera_height: int = 720
     camera_fps: int = 10
