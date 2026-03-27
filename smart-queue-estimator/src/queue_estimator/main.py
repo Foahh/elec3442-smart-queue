@@ -105,7 +105,7 @@ def camera_loop(settings: Settings, state: SharedState) -> None:
     zone = QueueZone(settings.queue_zone)
     tracker = QueueStateTracker(settings)
     estimator = WaitTimeEstimator(settings)
-    display = make_display(settings)
+    display = make_display()
     snapshot_interval_seconds = 60.0 / max(settings.snapshots_per_minute, 1)
     last_snapshot_time = time.monotonic()
     last_level: str | None = None

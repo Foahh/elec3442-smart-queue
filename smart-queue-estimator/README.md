@@ -9,7 +9,7 @@ Backend system for estimating queue length and wait time from camera feeds on Ra
 - Real-time queue state and rolling wait-time estimation
 - SQLite persistence via SQLModel
 - FastAPI HTTP + WebSocket API
-- Sense HAT display support with terminal fallback
+- Sense HAT display output
 - Structured logging with Loguru
 
 ## Requirements
@@ -57,7 +57,6 @@ QE_CAMERA_INDEX=0
 QE_CAMERA_WIDTH=1280
 QE_CAMERA_HEIGHT=720
 QE_CAMERA_FPS=10
-QE_DISPLAY_BACKEND=terminal
 QE_DATABASE_URL=sqlite:///data/queue.db
 ```
 
@@ -69,22 +68,15 @@ QE_CAMERA_SOURCE=picamera
 QE_CAMERA_WIDTH=1280
 QE_CAMERA_HEIGHT=720
 QE_CAMERA_FPS=10
-QE_DISPLAY_BACKEND=sensehat
 QE_DATABASE_URL=sqlite:///data/queue.db
 ```
 
 ## Running
 
-Development machine (webcam + terminal display):
+Development machine (webcam + Sense HAT emulation):
 
 ```bash
 uv run queue-estimator
-```
-
-Development machine with Sense HAT emulation:
-
-```bash
-QE_DISPLAY_BACKEND=sensehat uv run queue-estimator
 ```
 
 This uses `sense-emu` and opens the emulator UI on the host machine.
@@ -93,7 +85,7 @@ Raspberry Pi (PiCamera2 + Sense HAT + NCNN):
 
 ```bash
 # Run yolo export once first if NCNN dir does not exist.
-QE_CAMERA_SOURCE=picamera QE_DISPLAY_BACKEND=sensehat uv run queue-estimator
+QE_CAMERA_SOURCE=picamera uv run queue-estimator
 ```
 
 ### Camera Test (Pi)
