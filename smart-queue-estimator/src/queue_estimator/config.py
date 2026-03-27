@@ -47,7 +47,7 @@ class Settings(BaseSettings):
     led_yellow_max: int = 8
 
     # Display backend
-    display_backend: Literal["sensehat", "terminal", "none"] = "terminal"
+    display_backend: Literal["sensehat", "terminal", "none"] = "none"
 
     # API
     api_host: str = "0.0.0.0"

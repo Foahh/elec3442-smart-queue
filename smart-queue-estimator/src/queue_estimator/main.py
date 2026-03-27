@@ -122,10 +122,19 @@ def camera_loop(settings: Settings, state: SharedState) -> None:
                         time.sleep(0.1)
                         continue
 
+                    inference_started_at = time.monotonic()
                     persons = detector.detect(frame)
+                    inference_ms = (time.monotonic() - inference_started_at) * 1000.0
+
+                    tracking_started_at = time.monotonic()
                     in_zone_persons = zone.filter_persons(persons, frame.shape[:2])
                     completed_events = tracker.update(in_zone_persons, frame_time)
+                    tracking_ms = (time.monotonic() - tracking_started_at) * 1000.0
+
+                    persistence_ms = 0.0
+                    persistence_started_at = time.monotonic()
                     _persist_person_events(completed_events)
+                    persistence_ms += (time.monotonic() - persistence_started_at) * 1000.0
                     for event in completed_events:
                         estimator.add_event(event)
 
@@ -135,12 +144,21 @@ def camera_loop(settings: Settings, state: SharedState) -> None:
                     level = estimator.busyness_level(queue_length)
 
                     logger.debug(
-                        "Frame | level={} tracks={} in_zone={} wait_seconds={:.2f}",
+                        (
+                            "level={} tracks={} in_zone={} wait_seconds={:.2f} "
+                            "inference_ms={:.2f} tracking_ms={:.2f} persistence_ms={:.2f}"
+                        ),
                         level.upper(),
                         len(persons),
                         len(in_zone_persons),
                         wait_seconds,
+                        inference_ms,
+                        tracking_ms,
+                        persistence_ms,
                     )
+
+                    end_to_end_latency_ms = (time.monotonic() - loop_started_at) * 1000.0
+                    effective_fps = 1000.0 / max(end_to_end_latency_ms, 0.001)
 
                     if level != last_level:
                         logger.info("Busyness level transition: {} -> {}", last_level, level)
@@ -153,6 +171,11 @@ def camera_loop(settings: Settings, state: SharedState) -> None:
                         estimated_wait_human=_humanize_wait(wait_seconds),
                         throughput_per_minute=throughput,
                         busyness_level=level,
+                        inference_ms=inference_ms,
+                        tracking_ms=tracking_ms,
+                        persistence_ms=persistence_ms,
+                        end_to_end_latency_ms=end_to_end_latency_ms,
+                        effective_fps=effective_fps,
                     )
                     state.update(status)
 
@@ -164,13 +187,34 @@ def camera_loop(settings: Settings, state: SharedState) -> None:
                             throughput_per_minute=throughput,
                             busyness_level=level,
                         )
+                        snapshot_write_started_at = time.monotonic()
                         _persist_snapshot(snapshot)
+                        persistence_ms += (time.monotonic() - snapshot_write_started_at) * 1000.0
+                        end_to_end_latency_ms = (time.monotonic() - loop_started_at) * 1000.0
+                        effective_fps = 1000.0 / max(end_to_end_latency_ms, 0.001)
+                        status = status.model_copy(
+                            update={
+                                "persistence_ms": persistence_ms,
+                                "end_to_end_latency_ms": end_to_end_latency_ms,
+                                "effective_fps": effective_fps,
+                            }
+                        )
+                        state.update(status)
                         state.broadcast(status)
                         logger.info(
-                            "Snapshot written | queue_length={} wait_seconds={:.2f} throughput={:.2f}",
+                            (
+                                "Snapshot written | queue_length={} wait_seconds={:.2f} throughput={:.2f} "
+                                "inference_ms={:.2f} tracking_ms={:.2f} persistence_ms={:.2f} "
+                                "latency_ms={:.2f} fps={:.2f}"
+                            ),
                             queue_length,
                             wait_seconds,
                             throughput,
+                            inference_ms,
+                            tracking_ms,
+                            persistence_ms,
+                            end_to_end_latency_ms,
+                            effective_fps,
                         )
                         last_snapshot_time = time.monotonic()
 

@@ -16,6 +16,11 @@ class QueueStatusResponse(BaseModel):
     estimated_wait_human: str
     throughput_per_minute: float
     busyness_level: str
+    inference_ms: float
+    tracking_ms: float
+    persistence_ms: float
+    end_to_end_latency_ms: float
+    effective_fps: float
 
 
 class SnapshotRecord(BaseModel):
