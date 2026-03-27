@@ -1088,19 +1088,6 @@ wheels = [
 ]
 
 [[package]]
-name = "sense-emu"
-version = "1.2.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "numpy" },
-    { name = "pillow" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/52/37/695133955ac48aedce8666278da4801e1abfa632a26675c33dbb5711a720/sense-emu-1.2.1.tar.gz", hash = "sha256:224301cd1a81d7fff5d1475b1b3a96aebaaeed757e7c1f25a5a1bddb13a373de", size = 230696, upload-time = "2023-05-19T15:12:47.064Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/8d/40/0061fc3c1e5391009099159e8cff4b4f53536609d0916693ede8a08354f6/sense_emu-1.2.1-py3-none-any.whl", hash = "sha256:32f4c3ea8fa635f0056fa9a734b9d886106e5ced3f7f57354afe44845e12e2ad", size = 241719, upload-time = "2023-05-19T15:12:11.413Z" },
-]
-
-[[package]]
 name = "sense-hat"
 version = "2.6.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1153,7 +1140,6 @@ dependencies = [
     { name = "numpy" },
     { name = "opencv-python-headless" },
     { name = "pydantic-settings" },
-    { name = "sense-emu" },
     { name = "sqlmodel" },
     { name = "ultralytics" },
     { name = "uvicorn", extra = ["standard"] },
@@ -1172,7 +1158,6 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.4.3" },
     { name = "opencv-python-headless", specifier = ">=4.13.0.92" },
     { name = "pydantic-settings", specifier = ">=2.13.1" },
-    { name = "sense-emu", specifier = ">=1.2.1" },
     { name = "sqlmodel", specifier = ">=0.0.37" },
     { name = "ultralytics", specifier = ">=8.4.30" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.42.0" },

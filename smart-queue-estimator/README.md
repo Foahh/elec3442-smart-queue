@@ -73,19 +73,23 @@ QE_DATABASE_URL=sqlite:///data/queue.db
 
 ## Running
 
-Development machine (webcam + Sense HAT emulation):
+Development machine (webcam):
 
 ```bash
 uv run queue-estimator
 ```
-
-This uses `sense-emu` and opens the emulator UI on the host machine.
 
 Raspberry Pi (PiCamera2 + Sense HAT + NCNN):
 
 ```bash
 # Run yolo export once first if NCNN dir does not exist.
 QE_CAMERA_SOURCE=picamera uv run queue-estimator
+```
+
+Sense HAT output requires Raspberry Pi dependencies:
+
+```bash
+uv sync --group pi
 ```
 
 ### Camera Test (Pi)

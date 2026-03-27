@@ -2,6 +2,7 @@ from __future__ import annotations
 
 """Sense HAT display implementation."""
 
+from importlib import import_module
 from typing import Literal
 
 from queue_estimator.display.base import LEDDisplay
@@ -14,16 +15,13 @@ class SenseHATDisplay(LEDDisplay):
         """Initialize Sense HAT instance."""
 
         try:
-            from sense_hat import SenseHat
-        except ImportError:
-            try:
-                from sense_emu import SenseHat
-            except ImportError as exc:
-                raise RuntimeError(
-                    "Sense HAT libraries not installed — run: uv sync for host emulation "
-                    "or install Raspberry Pi dependencies for real hardware"
-                ) from exc
-        self._sense = SenseHat()
+            sense_hat_module = import_module("sense_hat")
+            sense_hat_cls = getattr(sense_hat_module, "SenseHat")
+        except ImportError as exc:
+            raise RuntimeError(
+                "Sense HAT library not installed — install Raspberry Pi dependencies with: uv sync --group pi"
+            ) from exc
+        self._sense = sense_hat_cls()
 
     def show_level(self, level: Literal["green", "yellow", "red"]) -> None:
         """Fill 8x8 matrix with level color."""
