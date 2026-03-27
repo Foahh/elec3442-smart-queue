@@ -39,7 +39,7 @@ class PersonDetector:
             else:
                 raise FileNotFoundError(
                     f"NCNN model directory not found: {model_path}. "
-                    "Export first with: python scripts/export_model.py"
+                    "Export first with: yolo export model=yolo26n.pt format=ncnn"
                 )
         except (RuntimeError, ValueError, OSError, FileNotFoundError) as exc:
             logger.exception("Failed to load model from {}", model_path)

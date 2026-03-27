@@ -15,8 +15,14 @@ class SenseHATDisplay(LEDDisplay):
 
         try:
             from sense_hat import SenseHat
-        except ImportError as exc:
-            raise RuntimeError("sense-hat not installed — run: uv sync --extra pi") from exc
+        except ImportError:
+            try:
+                from sense_emu import SenseHat
+            except ImportError as exc:
+                raise RuntimeError(
+                    "Sense HAT libraries not installed — run: uv sync for host emulation "
+                    "or install Raspberry Pi dependencies for real hardware"
+                ) from exc
         self._sense = SenseHat()
 
     def show_level(self, level: Literal["green", "yellow", "red"]) -> None:

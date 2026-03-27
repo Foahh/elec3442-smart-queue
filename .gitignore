@@ -1,2 +1,6 @@
 __pycache__
 *.pt
+uv.lock
+.pytest_cache
+.venv
+*.egg-info/

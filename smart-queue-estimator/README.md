@@ -16,76 +16,48 @@ Backend system for estimating queue length and wait time from camera feeds on Ra
 
 - Python 3.14 (pinned by `.python-version`)
 - `uv` package manager
-- Conda environment `elec3442`
 
-## Setup — Development Machine
+## Setup
+
+Install [`uv`](https://docs.astral.sh/uv/getting-started/installation/) if you do not have it yet.
 
 ```bash
-conda activate elec3442
-cd smart-queue-estimator
-uv sync --group dev
+git clone https://github.com/Foahh/elec3442-smart-queue
+cd elec3442-smart-queue/smart-queue-estimator
+
+uv python install 3.14
+uv sync
 ```
 
-## Setup — Raspberry Pi 
+**Raspberry Pi:** install `git` (and pip) if needed, then Pi-only camera/HAT wheels:
 
 ```bash
-# System packages
 sudo apt update && sudo apt upgrade -y
 sudo apt install python3-pip git -y
-
-# Install uv
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Clone and enter project
-git clone https://github.com/Foahh/elec3442-smart-queue && cd smart-queue-estimator
-
-# Install core dependencies
-uv sync
-
-# Install Pi-only camera/HAT packages
 uv pip install -r requirements-pi.txt
-
-# Install NCNN export dependencies
-pip install ultralytics[export]
 ```
+
+Use `uv run …` for commands so the project environment is used (see **Running**).
 
 ## Prepare Model (Required Before Running)
 
-Download and export the PyTorch model to NCNN format:
+Export the PyTorch model to NCNN format:
 
 > imgsz: Desired image size for the model input. Can be an integer for square images or a tuple (height, width) for specific dimensions. See [Ultralytics YOLO NCNN Export](https://docs.ultralytics.com/integrations/ncnn/#installation)
 
 ```bash
-# Using the provided export script
-python scripts/export_model.py
+# Export a YOLO26n PyTorch model to NCNN format
+uv run yolo export model=yolo26n.pt format=ncnn # creates 'yolo26n_ncnn_model'
 
-# Or with custom options
-python scripts/export_model.py --model yolo26n.pt --imgsz 640
+# Run inference with the exported model
+uv run yolo predict model='yolo26n_ncnn_model' source='https://ultralytics.com/images/bus.jpg'
 
-# Or via Ultralytics CLI directly
-yolo export model=models/yolo26n.pt format=ncnn imgsz=640
+# Benchmark YOLO26n speed and accuracy on the COCO128 dataset for all export formats
+uv run yolo benchmark model=yolo26n.pt data=coco128.yaml imgsz=640
 ```
 
 This creates `models/yolo26n_ncnn_model/`. The estimator runtime always loads
 this NCNN directory.
-
-### Benchmarking
-
-Reproduce Ultralytics benchmarks on your device:
-
-```bash
-# Benchmark all formats
-python scripts/benchmark.py
-
-# Benchmark NCNN only
-python scripts/benchmark.py --format ncnn
-
-# Custom dataset and image size
-python scripts/benchmark.py --data coco128.yaml --imgsz 640
-
-# Or via Ultralytics CLI
-yolo benchmark model=models/yolo26n.pt data=coco128.yaml imgsz=640
-```
 
 ## Environment Configuration
 
@@ -125,10 +97,18 @@ Development machine (webcam + terminal display):
 uv run queue-estimator
 ```
 
+Development machine with Sense HAT emulation:
+
+```bash
+QE_DISPLAY_BACKEND=sensehat uv run queue-estimator
+```
+
+This uses `sense-emu` and opens the emulator UI on the host machine.
+
 Raspberry Pi (PiCamera2 + Sense HAT + NCNN):
 
 ```bash
-# Run export_model.py once first if NCNN dir does not exist.
+# Run yolo export once first if NCNN dir does not exist.
 QE_CAMERA_SOURCE=picamera QE_DISPLAY_BACKEND=sensehat uv run queue-estimator
 ```
 
@@ -142,12 +122,6 @@ rpicam-hello
 
 # Headless capture test
 rpicam-still -o test.jpg && echo "Camera OK"
-```
-
-## Testing
-
-```bash
-uv run pytest
 ```
 
 ## API Endpoints

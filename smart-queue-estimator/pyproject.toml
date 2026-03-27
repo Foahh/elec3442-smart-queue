@@ -10,13 +10,11 @@ dependencies = [
     "numpy>=2.4.3",
     "opencv-python-headless>=4.13.0.92",
     "pydantic-settings>=2.13.1",
+    "sense-emu>=1.2.1",
     "sqlmodel>=0.0.37",
-    "ultralytics>=8.4.30",
+    "ultralytics[export]>=8.4.30",
     "uvicorn[standard]>=0.42.0",
 ]
-
-[dependency-groups]
-dev = ["pytest", "pytest-asyncio", "httpx", "sense-emu"]
 
 [project.scripts]
 queue-estimator = "queue_estimator.main:main"
@@ -31,8 +29,11 @@ package-dir = {"" = "src"}
 [tool.setuptools.packages.find]
 where = ["src"]
 
-[tool.pytest.ini_options]
-pythonpath = ["src"]
+[dependency-groups]
+pi = [
+    "picamera2",
+    "sense-hat",
+]
 
 [tool.uv]
 default-groups = []
