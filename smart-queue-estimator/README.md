@@ -29,35 +29,19 @@ uv python install 3.14
 uv sync
 ```
 
-**Raspberry Pi:** install `git` (and pip) if needed, then Pi-only camera/HAT wheels:
+**Raspberry Pi dependency group:**
 
 ```bash
 sudo apt update && sudo apt upgrade -y
 sudo apt install python3-pip git -y
-uv pip install -r requirements-pi.txt
+uv sync --group pi
 ```
 
 Use `uv run …` for commands so the project environment is used (see **Running**).
 
 ## Prepare Model (Required Before Running)
 
-Export the PyTorch model to NCNN format:
-
-> imgsz: Desired image size for the model input. Can be an integer for square images or a tuple (height, width) for specific dimensions. See [Ultralytics YOLO NCNN Export](https://docs.ultralytics.com/integrations/ncnn/#installation)
-
-```bash
-# Export a YOLO26n PyTorch model to NCNN format
-uv run yolo export model=yolo26n.pt format=ncnn # creates 'yolo26n_ncnn_model'
-
-# Run inference with the exported model
-uv run yolo predict model='yolo26n_ncnn_model' source='https://ultralytics.com/images/bus.jpg'
-
-# Benchmark YOLO26n speed and accuracy on the COCO128 dataset for all export formats
-uv run yolo benchmark model=yolo26n.pt data=coco128.yaml imgsz=640
-```
-
-This creates `models/yolo26n_ncnn_model/`. The estimator runtime always loads
-this NCNN directory.
+Follow **[yolo-export/README.md](../yolo-export/README.md)**, then copy the generated `yolo26n_ncnn_model` folder into this project’s `models/` directory. The estimator runtime always loads that NCNN directory.
 
 ## Environment Configuration
 

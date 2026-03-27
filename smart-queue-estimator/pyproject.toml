@@ -12,8 +12,14 @@ dependencies = [
     "pydantic-settings>=2.13.1",
     "sense-emu>=1.2.1",
     "sqlmodel>=0.0.37",
-    "ultralytics[export]>=8.4.30",
+    "ultralytics>=8.4.30",
     "uvicorn[standard]>=0.42.0",
+]
+
+[dependency-groups]
+pi = [
+    "picamera2; platform_system == 'Linux' and (platform_machine == 'aarch64')",
+    "sense-hat; platform_system == 'Linux' and (platform_machine == 'aarch64')",
 ]
 
 [project.scripts]
@@ -28,12 +34,6 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
-
-[dependency-groups]
-pi = [
-    "picamera2",
-    "sense-hat",
-]
 
 [tool.uv]
 default-groups = []

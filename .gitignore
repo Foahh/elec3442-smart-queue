@@ -1,6 +1,6 @@
 __pycache__
 *.pt
-uv.lock
 .pytest_cache
 .venv
 *.egg-info/
+yolo26n_ncnn_model
