@@ -1,11 +1,10 @@
-# Smart Queue Length & Wait Time Estimator (Backend)
+# Smart Queue Length & Wait Time Estimator
 
-Backend-only system for estimating queue length and wait time from camera feeds on Raspberry Pi or a development machine.
+Backend system for estimating queue length and wait time from camera feeds on Raspberry Pi or a development machine.
 
 ## Features
 
-- YOLO26 + ByteTrack person detection/tracking
-- First-class NCNN model support for Raspberry Pi 5 (4.5x faster than PyTorch)
+- YOLO26 (w/ NCNN model format) + ByteTrack person detection/tracking
 - Configurable polygon queue zone filtering
 - Real-time queue state and rolling wait-time estimation
 - SQLite persistence via SQLModel
@@ -24,12 +23,10 @@ Backend-only system for estimating queue length and wait time from camera feeds 
 ```bash
 conda activate elec3442
 cd smart-queue-estimator
-uv sync --extra dev
+uv sync --group dev
 ```
 
-## Setup — Raspberry Pi 5 (without Docker)
-
-Tested on Raspberry Pi OS Bookworm (Debian 12), 64-bit Lite.
+## Setup — Raspberry Pi 
 
 ```bash
 # System packages
@@ -40,38 +37,23 @@ sudo apt install python3-pip git -y
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Clone and enter project
-git clone <your-repo-url> && cd smart-queue-estimator
+git clone https://github.com/Foahh/elec3442-smart-queue && cd smart-queue-estimator
 
-# Install with Pi extras
-uv sync --extra pi
+# Install core dependencies
+uv sync
 
-# Install NCNN export dependencies (one-time, on Pi or dev machine)
+# Install Pi-only camera/HAT packages
+uv pip install -r requirements-pi.txt
+
+# Install NCNN export dependencies
 pip install ultralytics[export]
 ```
 
-### Pi 5 Best Practices
+## Prepare Model (Required Before Running)
 
-| Practice | Detail |
-| --- | --- |
-| **Use an NVMe SSD** | SD cards wear out under 24/7 writes. Use a PCIe NVMe adapter (e.g. Pimoroni NVMe Base). |
-| **Flash Raspberry Pi OS Lite** | Skip the desktop environment to free ~400 MB RAM for inference. |
-| **Overclock cautiously** | CPU up to 2.9 GHz, GPU to 1.0 GHz via `/boot/firmware/config.txt`. Requires active cooling. Reduce by 100 MHz if unstable. |
-| **Active cooling** | The official Pi 5 Active Cooler or a heatsink+fan is required under sustained YOLO inference workloads. |
-| **Use NCNN format** | NCNN is ~4.5x faster than PyTorch on Pi 5 ARM CPU (68 ms vs 302 ms per frame at 640px). |
-| **Prefer yolo26n** | The nano variant is the only practical choice for real-time use on Pi 5. |
+Download and export the PyTorch model to NCNN format:
 
-## Model Format Selection
-
-This project supports two model formats:
-
-| Format | Config value | When to use |
-| --- | --- | --- |
-| **PyTorch** (`.pt`) | `QE_YOLO_MODEL_FORMAT=pt` (default) | Development, GPU machines, quick prototyping |
-| **NCNN** | `QE_YOLO_MODEL_FORMAT=ncnn` | Raspberry Pi 5 deployment (recommended) |
-
-### NCNN Export Workflow
-
-Export the PyTorch model to NCNN format (run once, on Pi or dev machine):
+> imgsz: Desired image size for the model input. Can be an integer for square images or a tuple (height, width) for specific dimensions. See [Ultralytics YOLO NCNN Export](https://docs.ultralytics.com/integrations/ncnn/#installation)
 
 ```bash
 # Using the provided export script
@@ -84,12 +66,8 @@ python scripts/export_model.py --model yolo26n.pt --imgsz 640
 yolo export model=models/yolo26n.pt format=ncnn imgsz=640
 ```
 
-This creates `models/yolo26n_ncnn_model/`. Then switch the runtime:
-
-```bash
-# In .env
-QE_YOLO_MODEL_FORMAT=ncnn
-```
+This creates `models/yolo26n_ncnn_model/`. The estimator runtime always loads
+this NCNN directory.
 
 ### Benchmarking
 
@@ -109,21 +87,12 @@ python scripts/benchmark.py --data coco128.yaml --imgsz 640
 yolo benchmark model=models/yolo26n.pt data=coco128.yaml imgsz=640
 ```
 
-Expected Pi 5 results for yolo26n (from Ultralytics docs):
-
-| Format | Inference (ms/frame) | mAP50-95 |
-| --- | --- | --- |
-| PyTorch | 302 | 0.480 |
-| NCNN | 68 | 0.481 |
-| ONNX | 130 | 0.476 |
-
 ## Environment Configuration
 
 Create `.env` in project root:
 
 ```env
 QE_YOLO_MODEL=yolo26n.pt
-QE_YOLO_MODEL_FORMAT=pt
 QE_YOLO_CONFIDENCE=0.4
 QE_YOLO_IOU=0.5
 QE_YOLO_IMGSZ=640
@@ -136,11 +105,10 @@ QE_DISPLAY_BACKEND=terminal
 QE_DATABASE_URL=sqlite:///data/queue.db
 ```
 
-For Raspberry Pi 5 deployment:
+For Raspberry Pi deployment:
 
 ```env
 QE_YOLO_MODEL=yolo26n.pt
-QE_YOLO_MODEL_FORMAT=ncnn
 QE_CAMERA_SOURCE=picamera
 QE_CAMERA_WIDTH=1280
 QE_CAMERA_HEIGHT=720
@@ -160,7 +128,8 @@ uv run queue-estimator
 Raspberry Pi (PiCamera2 + Sense HAT + NCNN):
 
 ```bash
-QE_CAMERA_SOURCE=picamera QE_DISPLAY_BACKEND=sensehat QE_YOLO_MODEL_FORMAT=ncnn uv run queue-estimator
+# Run export_model.py once first if NCNN dir does not exist.
+QE_CAMERA_SOURCE=picamera QE_DISPLAY_BACKEND=sensehat uv run queue-estimator
 ```
 
 ### Camera Test (Pi)
@@ -190,10 +159,3 @@ uv run pytest
 | WS | `/api/v1/queue/live` | Live status stream for connected clients |
 | GET | `/api/v1/analytics/summary` | Aggregated analytics for configurable period |
 | GET | `/api/v1/analytics/peak-hours` | Top 3 busiest hours in last 7 days |
-
-## Python Version Compatibility Note
-
-This project pins Python 3.14. On Raspberry Pi OS Bookworm the system Python
-is 3.11. Use `uv` which manages its own Python toolchain, or install 3.14 via
-`pyenv`. If dependency issues arise on Pi, Python 3.11–3.13 are safe fallback
-targets — adjust `.python-version` and `requires-python` in `pyproject.toml`.

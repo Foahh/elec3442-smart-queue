@@ -15,11 +15,7 @@ dependencies = [
     "uvicorn[standard]>=0.42.0",
 ]
 
-[project.optional-dependencies]
-pi = [
-    "picamera2; extra == \"pi\" and platform_machine == \"aarch64\"",
-    "sense-hat; extra == \"pi\" and platform_machine == \"aarch64\"",
-]
+[dependency-groups]
 dev = ["pytest", "pytest-asyncio", "httpx", "sense-emu"]
 
 [project.scripts]
@@ -37,3 +33,6 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
+
+[tool.uv]
+default-groups = []

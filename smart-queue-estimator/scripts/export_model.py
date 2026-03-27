@@ -9,7 +9,8 @@ Usage:
     python scripts/export_model.py --imgsz 320           # smaller input for faster inference
 
 The exported NCNN directory is placed alongside the source .pt file inside
-the configured model_dir (default: models/).
+the configured model_dir (default: models/). Runtime now requires this
+exported NCNN directory before starting the estimator.
 """
 
 import argparse
@@ -73,7 +74,7 @@ def export_to_ncnn(
     else:
         logger.info("Exported model already at {}", target)
 
-    logger.info("Export complete. Use QE_YOLO_MODEL_FORMAT=ncnn to switch runtime.")
+    logger.info("Export complete. Runtime will load this NCNN model directory.")
     return target
 
 

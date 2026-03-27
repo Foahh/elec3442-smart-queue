@@ -8,15 +8,11 @@ from queue_estimator.config import Settings
 
 
 def resolve_model_path(settings: Settings) -> Path:
-    """Return the effective model path for the configured format.
+    """Return the NCNN model directory path used at runtime.
 
-    For ``"pt"`` this is ``<model_dir>/<yolo_model>`` (a single file).
-    For ``"ncnn"`` this is ``<model_dir>/<stem>_ncnn_model/`` (a directory
-    produced by ``YOLO.export(format="ncnn")``).
+    Runtime always expects ``<model_dir>/<stem>_ncnn_model/`` produced by
+    ``YOLO.export(format="ncnn")``.
     """
 
-    model_dir = settings.model_dir
-    if settings.yolo_model_format == "ncnn":
-        stem = settings.yolo_model.removesuffix(".pt")
-        return model_dir / f"{stem}_ncnn_model"
-    return model_dir / settings.yolo_model
+    stem = settings.yolo_model.removesuffix(".pt")
+    return settings.model_dir / f"{stem}_ncnn_model"
