@@ -16,8 +16,10 @@ class Settings(BaseSettings):
 
     # Model
     yolo_model: str = "yolo26n.pt"
+    yolo_model_format: Literal["pt", "ncnn"] = "pt"
     yolo_confidence: float = 0.4
     yolo_iou: float = 0.5
+    yolo_imgsz: int = 640
     model_dir: Path = Path("models")
 
     # Camera

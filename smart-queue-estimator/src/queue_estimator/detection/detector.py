@@ -2,15 +2,16 @@ from __future__ import annotations
 
 """YOLO person detection and tracking."""
 
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
-import shutil
 
 import numpy as np
 from loguru import logger
 from ultralytics import YOLO
 
 from queue_estimator.config import Settings
+from queue_estimator.detection.model_path import resolve_model_path
 
 
 @dataclass(slots=True)
@@ -31,18 +32,24 @@ class PersonDetector:
 
         self._settings = settings
         settings.model_dir.mkdir(parents=True, exist_ok=True)
-        model_path = settings.model_dir / settings.yolo_model
+        model_path = resolve_model_path(settings)
         try:
             if model_path.exists():
+                logger.info("Loading {} model from {}", settings.yolo_model_format.upper(), model_path)
                 self._model = YOLO(str(model_path))
+            elif settings.yolo_model_format == "ncnn":
+                raise FileNotFoundError(
+                    f"NCNN model directory not found: {model_path}. "
+                    "Export first with: python scripts/export_model.py"
+                )
             else:
-                logger.info("YOLO model not found locally. Downloading {}...", settings.yolo_model)
+                logger.info("PyTorch model not found locally. Downloading {}...", settings.yolo_model)
                 self._model = YOLO(settings.yolo_model)
                 downloaded_path = Path(settings.yolo_model)
                 if downloaded_path.exists() and downloaded_path.resolve() != model_path.resolve():
                     shutil.move(str(downloaded_path), str(model_path))
                 self._model = YOLO(str(model_path))
-        except (RuntimeError, ValueError, OSError) as exc:
+        except (RuntimeError, ValueError, OSError, FileNotFoundError) as exc:
             logger.exception("Failed to load model from {}", model_path)
             raise RuntimeError(f"Failed to load model: {model_path}") from exc
 
@@ -57,6 +64,7 @@ class PersonDetector:
             classes=[0],
             conf=self._settings.yolo_confidence,
             iou=self._settings.yolo_iou,
+            imgsz=self._settings.yolo_imgsz,
             verbose=False,
         )
         if not results:
