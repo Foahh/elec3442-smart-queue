@@ -20,7 +20,7 @@ class TerminalDisplay(LEDDisplay):
             "red": "\033[31m",
         }
         block = f"{color_map[level]}█ {level.upper()}\033[0m"
-        sys.stdout.write(f"\r{block}")
+        sys.stdout.write(f"\r\033[K{block}\n")
         sys.stdout.flush()
 
     def clear(self) -> None:

@@ -135,7 +135,8 @@ def camera_loop(settings: Settings, state: SharedState) -> None:
                     level = estimator.busyness_level(queue_length)
 
                     logger.debug(
-                        "Frame processed | tracks={} in_zone={} wait_seconds={:.2f}",
+                        "Frame | level={} tracks={} in_zone={} wait_seconds={:.2f}",
+                        level.upper(),
                         len(persons),
                         len(in_zone_persons),
                         wait_seconds,
