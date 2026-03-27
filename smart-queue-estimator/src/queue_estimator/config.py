@@ -9,17 +9,21 @@ from typing import Literal
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+ENV_FILE = PROJECT_ROOT / ".env"
+
+
 class Settings(BaseSettings):
     """Runtime settings loaded from environment."""
 
-    model_config = SettingsConfigDict(env_file=".env", env_prefix="QE_")
+    model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="QE_")
 
     # Model
     yolo_model: str = "yolo26n.pt"
     yolo_confidence: float = 0.4
     yolo_iou: float = 0.5
     yolo_imgsz: int = 640
-    model_dir: Path = Path("models")
+    model_dir: Path = PROJECT_ROOT / "models"
 
     # Camera
     camera_source: Literal["picamera", "webcam", "video"] = "webcam"
