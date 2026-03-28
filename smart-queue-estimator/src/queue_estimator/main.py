@@ -8,8 +8,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Callable
 import sys
-
+import cv2
 import uvicorn
+import numpy as np
 from loguru import logger
 
 from queue_estimator.analyzer.queue_state import QueueStateTracker
@@ -110,6 +111,10 @@ def camera_loop(settings: Settings, state: SharedState) -> None:
     last_snapshot_time = time.monotonic()
     last_level: str | None = None
 
+    # to set the real-time output window size
+    DISPLAY_WIDTH = 800
+    DISPLAY_HEIGHT = 600
+
     try:
         with make_camera(settings) as camera:
             while True:
@@ -179,6 +184,43 @@ def camera_loop(settings: Settings, state: SharedState) -> None:
                     )
                     state.update(status)
 
+                    # create visualization frame with bounding boxes and zone
+                    vis_frame = frame.copy()
+                    zone_points =settings.queue_zone
+                    if zone_points and len(zone_points) >= 3:
+                        pts = np.array(zone_points, np.int32).reshape((-1, 1, 2))
+                        cv2.polylines(vis_frame, [pts], True, color=(0, 255, 255), thickness=2)
+
+                    # draw boxes for all persons
+                    for person in persons:
+                        x1, y1, x2, y2 = [int(coord) for coord in person.bbox_xyxy]
+                        color = (0, 255, 0) if person in in_zone_persons else (0, 0, 255)
+                        cv2.rectangle(vis_frame, (x1, y1), (x2, y2), color=color, thickness=2)
+                        # add track ID
+                        if hasattr(person, 'track_id') and person.track_id is not None:
+                            cv2.putText(
+                                vis_frame,
+                                f"ID {person.track_id}",
+                                (x1, y1 - 5),
+                                cv2.FONT_HERSHEY_SIMPLEX,
+                                0.5,
+                                color,
+                                1,
+                            )
+                    
+                    # Add status overlay
+                    status_text = f"Queue: {queue_length} | Wait: {wait_seconds:.0f}s | Level: {level.upper()} | FPS: {effective_fps:.1f}"
+                    cv2.putText(vis_frame, status_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+                    time_str = frame_time.strftime("%Y-%m-%d %H:%M:%S")
+                    cv2.putText(vis_frame, time_str, (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+
+                    # Show real-time window
+                    resized_frame = cv2.resize(vis_frame, (DISPLAY_WIDTH, DISPLAY_HEIGHT))
+                    cv2.imshow('Queue Estimator - Press ESC to exit', resized_frame)
+                    if cv2.waitKey(1) & 0xFF == 27:  # ESC key
+                        logger.info("ESC pressed, shutting down...")
+                        break
+
                     if (time.monotonic() - last_snapshot_time) >= snapshot_interval_seconds:
                         snapshot = QueueSnapshot(
                             timestamp=frame_time,
@@ -229,6 +271,11 @@ def camera_loop(settings: Settings, state: SharedState) -> None:
                     continue
     except Exception:
         logger.exception("Camera source failure")
+
+    finally:
+        # release video writer resources
+        cv2.destroyAllWindows()
+
 
 
 def _configure_logging() -> None:
