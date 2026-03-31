@@ -14,34 +14,34 @@ Backend system for estimating queue length and wait time from camera feeds on Ra
 
 ## Requirements
 
-- Python 3.14 (pinned by `.python-version`)
-- `uv` package manager
+- Python 3.14 (see `environment.yml`)
+- [Conda](https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html)
 
 ## Setup
-
-Install [`uv`](https://docs.astral.sh/uv/getting-started/installation/) if you do not have it yet.
 
 ```bash
 git clone https://github.com/Foahh/elec3442-smart-queue
 cd elec3442-smart-queue/smart-queue-estimator
 
-uv python install 3.14
-uv sync
+conda env create -f environment.yml
+conda activate elec3442
 ```
 
-**Raspberry Pi dependency group:**
+The last pip line in `environment.yml` (`-e .`) installs this repo and registers the `queue-estimator` command. If you see `command not found`, run `pip install -e .` from this directory (or `conda env update -f environment.yml --prune` after pulling changes).
+
+**Raspberry Pi optional extras** (PiCamera2, Sense HAT — install on the Pi only):
 
 ```bash
 sudo apt update && sudo apt upgrade -y
 sudo apt install python3-pip git -y
-uv sync --group pi
+pip install picamera2 sense-hat
 ```
 
-Use `uv run …` for commands so the project environment is used (see **Running**).
+After `conda activate elec3442`, run commands in that environment (see **Running**).
 
 ## Prepare Model (Required Before Running)
 
-Follow **[yolo-export/README.md](../yolo-export/README.md)**, then copy the generated `yolo26n_ncnn_model` folder into this project’s `models/` directory. The estimator runtime always loads that NCNN directory.
+Follow **[Download and export YOLO → NCNN](../README.md#download-and-export-yolo--ncnn)** in the repository root README, then copy the generated `yolo26n_ncnn_model` folder into this project’s `models/` directory. The estimator runtime always loads that NCNN directory.
 
 ## Environment Configuration
 
@@ -65,7 +65,7 @@ Use local video file as input (development/testing):
 
 ```env
 QE_CAMERA_SOURCE=video
-QE_CAMERA_VIDEO_PATH=D:/path/to/queue_sample.mp4
+QE_CAMERA_VIDEO_PATH=../video/queue_sample.mp4
 QE_DATABASE_URL=sqlite:///data/queue.db
 ```
 
@@ -85,20 +85,21 @@ QE_DATABASE_URL=sqlite:///data/queue.db
 Development machine (webcam):
 
 ```bash
-uv run queue-estimator
+conda activate elec3442
+queue-estimator
 ```
 
 Raspberry Pi (PiCamera2 + Sense HAT + NCNN):
 
 ```bash
-# Run yolo export once first if NCNN dir does not exist.
-QE_CAMERA_SOURCE=picamera uv run queue-estimator
+# If NCNN dir is missing, export per ../README.md then copy models/.
+QE_CAMERA_SOURCE=picamera queue-estimator
 ```
 
-Sense HAT output requires Raspberry Pi dependencies:
+Sense HAT output requires Raspberry Pi packages:
 
 ```bash
-uv sync --group pi
+pip install picamera2 sense-hat
 ```
 
 ### Camera Test (Pi)

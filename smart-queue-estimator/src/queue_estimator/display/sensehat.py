@@ -19,7 +19,7 @@ class SenseHATDisplay(LEDDisplay):
             sense_hat_cls = getattr(sense_hat_module, "SenseHat")
         except ImportError as exc:
             raise RuntimeError(
-                "Sense HAT library not installed — install Raspberry Pi dependencies with: uv sync --group pi"
+                "Sense HAT library not installed — on Raspberry Pi: pip install sense-hat"
             ) from exc
         self._sense = sense_hat_cls()
 

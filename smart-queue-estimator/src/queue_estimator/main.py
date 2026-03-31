@@ -17,7 +17,7 @@ from queue_estimator.analyzer.queue_state import QueueStateTracker
 from queue_estimator.analyzer.wait_time import WaitTimeEstimator
 from queue_estimator.api.app import create_app
 from queue_estimator.camera import make_camera
-from queue_estimator.config import Settings, get_settings
+from queue_estimator.config import Settings, get_settings, preview_targets
 from queue_estimator.database import create_db_and_tables, get_session
 from queue_estimator.db_models import PersonEvent, QueueSnapshot
 from queue_estimator.detection.detector import PersonDetector
@@ -34,6 +34,7 @@ class SharedState:
 
         self._lock = threading.Lock()
         self._status: QueueStatusResponse | None = None
+        self._preview_jpeg: bytes | None = None
         self._broadcaster: Callable[[dict[str, object]], None] | None = None
 
     def set_broadcaster(self, broadcaster: Callable[[dict[str, object]], None]) -> None:
@@ -59,6 +60,18 @@ class SharedState:
 
         with self._lock:
             return self._status
+
+    def set_preview_jpeg(self, data: bytes) -> None:
+        """Store latest encoded preview frame for HTTP MJPEG clients."""
+
+        with self._lock:
+            self._preview_jpeg = data
+
+    def get_preview_jpeg(self) -> bytes | None:
+        """Return latest JPEG preview bytes if any."""
+
+        with self._lock:
+            return self._preview_jpeg
 
 
 def _humanize_wait(seconds: float) -> str:
@@ -102,6 +115,8 @@ def _persist_snapshot(snapshot: QueueSnapshot) -> None:
 def camera_loop(settings: Settings, state: SharedState) -> None:
     """Run queue estimation processing loop in a daemon thread."""
 
+    use_opencv, use_http = preview_targets(settings)
+    opencv_used = False
     detector = PersonDetector(settings)
     zone = QueueZone(settings.queue_zone)
     tracker = QueueStateTracker(settings)
@@ -214,12 +229,17 @@ def camera_loop(settings: Settings, state: SharedState) -> None:
                     time_str = frame_time.strftime("%Y-%m-%d %H:%M:%S")
                     cv2.putText(vis_frame, time_str, (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 
-                    # Show real-time window
                     resized_frame = cv2.resize(vis_frame, (DISPLAY_WIDTH, DISPLAY_HEIGHT))
-                    cv2.imshow('Queue Estimator - Press ESC to exit', resized_frame)
-                    if cv2.waitKey(1) & 0xFF == 27:  # ESC key
-                        logger.info("ESC pressed, shutting down...")
-                        break
+                    if use_http:
+                        ok, buf = cv2.imencode(".jpg", resized_frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
+                        if ok:
+                            state.set_preview_jpeg(buf.tobytes())
+                    if use_opencv:
+                        opencv_used = True
+                        cv2.imshow("Queue Estimator - Press ESC to exit", resized_frame)
+                        if cv2.waitKey(1) & 0xFF == 27:  # ESC key
+                            logger.info("ESC pressed, shutting down...")
+                            break
 
                     if (time.monotonic() - last_snapshot_time) >= snapshot_interval_seconds:
                         snapshot = QueueSnapshot(
@@ -273,8 +293,8 @@ def camera_loop(settings: Settings, state: SharedState) -> None:
         logger.exception("Camera source failure")
 
     finally:
-        # release video writer resources
-        cv2.destroyAllWindows()
+        if opencv_used:
+            cv2.destroyAllWindows()
 
 
 
@@ -297,6 +317,18 @@ def main() -> None:
 
     _configure_logging()
     settings = get_settings()
+    use_ocv, use_http = preview_targets(settings)
+    logger.info(
+        "Preview QE_PREVIEW_MODE={} -> opencv_window={} http_stream={}",
+        settings.preview_mode,
+        use_ocv,
+        use_http,
+    )
+    if use_http:
+        logger.info(
+            "Open http://127.0.0.1:{}/api/v1/queue/preview for live video",
+            settings.api_port,
+        )
     create_db_and_tables()
 
     shared_state = SharedState()

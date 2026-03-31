@@ -2,6 +2,8 @@ from __future__ import annotations
 
 """Application configuration."""
 
+import os
+import sys
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
@@ -55,6 +57,10 @@ class Settings(BaseSettings):
     api_host: str = "0.0.0.0"
     api_port: int = 8000
 
+    # Preview: OpenCV's Qt GUI often breaks on Linux+Wayland (xcb / XWayland). Use HTTP stream instead.
+    # auto = OpenCV window except on Linux+Wayland, where only the browser stream is enabled.
+    preview_mode: Literal["auto", "opencv", "http", "off", "both"] = "auto"
+
     # Database
     database_url: str = "sqlite:///data/queue.db"
 
@@ -64,4 +70,23 @@ def get_settings() -> Settings:
     """Return the cached settings singleton."""
 
     return Settings()
+
+
+def preview_targets(settings: Settings) -> tuple[bool, bool]:
+    """Return (use_opencv_window, use_http_stream) for the given preview_mode."""
+
+    mode = settings.preview_mode
+    if mode == "auto":
+        if sys.platform == "linux" and os.environ.get("WAYLAND_DISPLAY"):
+            return False, True
+        return True, False
+    if mode == "opencv":
+        return True, False
+    if mode == "http":
+        return False, True
+    if mode == "both":
+        return True, True
+    if mode == "off":
+        return False, False
+    raise RuntimeError(f"Unknown preview_mode: {mode}")
 

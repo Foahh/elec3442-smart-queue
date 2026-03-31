@@ -1,9 +1,0 @@
-[project]
-name = "yolo-export"
-version = "0.1.0"
-description = "Ultralytics environment for exporting YOLO weights to NCNN (smart-queue-estimator)"
-readme = "README.md"
-requires-python = ">=3.12"
-dependencies = [
-    "ultralytics[export]>=8.4.30",
-]

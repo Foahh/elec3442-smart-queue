@@ -1,0 +1,16 @@
+name: elec3442
+channels:
+  - conda-forge
+dependencies:
+  - python=3.14
+  - pip
+  - pip:
+      - fastapi>=0.135.2
+      - loguru>=0.7.3
+      - numpy>=2.4.3
+      - opencv-python>=4.13.0.92
+      - pydantic-settings>=2.13.1
+      - sqlmodel>=0.0.37
+      - ultralytics>=8.4.30
+      - "uvicorn[standard]>=0.42.0"
+      - -e .

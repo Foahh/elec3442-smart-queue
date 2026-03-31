@@ -1,6 +1,5 @@
 __pycache__
-*.pt
 .pytest_cache
 .venv
 *.egg-info/
-yolo26n_ncnn_model
+condaenv.*.requirements.txt
