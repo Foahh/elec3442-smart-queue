@@ -29,12 +29,17 @@ conda activate elec3442
 
 The last pip line in `environment.yml` (`-e .`) installs this repo and registers the `queue-estimator` command. If you see `command not found`, run `pip install -e .` from this directory (or `conda env update -f environment.yml --prune` after pulling changes).
 
-**Raspberry Pi optional extras** (PiCamera2, Sense HAT — install on the Pi only):
+### Raspberry Pi runtime (inference-only, NCNN)
+
+This project is designed so the Raspberry Pi runs **inference only** using the
+exported NCNN model directory (`models/yolo26n_ncnn_model/`). Do YOLO export on a
+development machine, then copy that directory onto the Pi.
+
+Install Pi runtime dependencies (PiCamera2 + Sense HAT) into the active environment:
 
 ```bash
-sudo apt update && sudo apt upgrade -y
-sudo apt install python3-pip git -y
-pip install picamera2 sense-hat
+conda activate elec3442
+pip install -r requirements.txt
 ```
 
 After `conda activate elec3442`, run commands in that environment (see **Running**).
@@ -99,7 +104,7 @@ QE_CAMERA_SOURCE=picamera queue-estimator
 Sense HAT output requires Raspberry Pi packages:
 
 ```bash
-pip install picamera2 sense-hat
+pip install -r requirements.txt
 ```
 
 ### Camera Test (Pi)

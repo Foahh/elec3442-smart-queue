@@ -10,6 +10,7 @@ dependencies:
   - pydantic-settings>=2.13.1
   - sqlmodel>=0.0.37
   - uvicorn>=0.42.0
-  - opencv>=4.13
+  - opencv-python-headless>=4.11
   - pip:
+      - ncnn
       - -e .
