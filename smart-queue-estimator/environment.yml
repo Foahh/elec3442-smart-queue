@@ -13,4 +13,5 @@ dependencies:
   - pip:
       - opencv-python-headless>=4.13
       - ncnn>=1.0.2
+      - pyxtrackers>=2026.3.3
       - -e .
