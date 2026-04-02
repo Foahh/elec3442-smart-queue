@@ -172,6 +172,8 @@ class _NcnnYoloPersonDetector:
         # pyxtrackers returns: [[x1, y1, x2, y2, track_id], ...]
         for row in np.asarray(tracked):
             x1, y1, x2, y2, tid = row[:5]
+            if np.isnan(x1) or np.isnan(y1) or np.isnan(x2) or np.isnan(y2):
+                continue
             center_x = ((float(x1) + float(x2)) / 2.0) / float(w0)
             center_y = ((float(y1) + float(y2)) / 2.0) / float(h0)
             persons.append(
