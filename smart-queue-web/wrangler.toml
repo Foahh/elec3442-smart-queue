@@ -1,0 +1,16 @@
+"$schema" = "./node_modules/wrangler/config-schema.json"
+main = ".open-next/worker.js"
+name = "smart-queue-web"
+
+compatibility_date = "2026-04-03"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
+
+[[ d1_databases ]]
+binding = "DB"
+database_name = "queues"
+database_id = "queues"
+migrations_dir = "drizzle"

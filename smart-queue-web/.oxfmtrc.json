@@ -8,12 +8,9 @@
   "printWidth": 80,
   "sortTailwindcss": {
     "stylesheet": "app/globals.css",
-    "functions": [
-      "cn",
-      "cva"
-    ]
+    "functions": ["cn", "cva"]
   },
-  "sortPackageJson": false,
+  "sortPackageJson": true,
   "ignorePatterns": [
     "dist/",
     "node_modules/",
@@ -21,6 +18,8 @@
     ".turbo/",
     "coverage/",
     "pnpm-lock.yaml",
-    ".pnpm-store/"
+    ".pnpm-store/",
+    "bun.lock",
+    "cloudflare-env.d.ts"
   ]
 }
