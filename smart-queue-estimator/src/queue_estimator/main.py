@@ -23,7 +23,7 @@ from queue_estimator.db_models import PersonEvent, QueueSnapshot
 from queue_estimator.detection.detector import PersonDetector
 from queue_estimator.detection.zone import QueueZone
 from queue_estimator.display import make_display
-from queue_estimator.schemas import QueueStatusResponse
+from queue_estimator.schemas import QueueStatusResponse, SensorReading
 
 
 class SharedState:
@@ -35,6 +35,7 @@ class SharedState:
         self._lock = threading.Lock()
         self._status: QueueStatusResponse | None = None
         self._preview_jpeg: bytes | None = None
+        self._sensors: SensorReading | None = None
         self._broadcaster: Callable[[dict[str, object]], None] | None = None
 
     def set_broadcaster(self, broadcaster: Callable[[dict[str, object]], None]) -> None:
@@ -72,6 +73,18 @@ class SharedState:
 
         with self._lock:
             return self._preview_jpeg
+
+    def update_sensors(self, sensors: SensorReading) -> None:
+        """Store latest sensor reading."""
+
+        with self._lock:
+            self._sensors = sensors
+
+    def get_sensors(self) -> SensorReading | None:
+        """Return latest sensor reading, or None if unavailable."""
+
+        with self._lock:
+            return self._sensors
 
 
 def _humanize_wait(seconds: float) -> str:
