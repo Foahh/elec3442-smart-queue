@@ -82,7 +82,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await dispatcher_task
 
 
-def create_app(shared_state: Any | None = None) -> FastAPI:
+def create_app(shared_state: Any | None = None, peer_cache: Any | None = None) -> FastAPI:
     """Create and configure FastAPI app."""
 
     app = FastAPI(title="Smart Queue Estimator API", lifespan=lifespan)
@@ -95,11 +95,14 @@ def create_app(shared_state: Any | None = None) -> FastAPI:
     )
     app.state.ws_hub = WebSocketHub()
     app.state.shared_state = shared_state
+    app.state.peer_cache = peer_cache
 
     from queue_estimator.api.routes.analytics import router as analytics_router
+    from queue_estimator.api.routes.peers import router as peers_router
     from queue_estimator.api.routes.queue import router as queue_router
 
     app.include_router(queue_router)
     app.include_router(analytics_router)
+    app.include_router(peers_router)
     return app
 

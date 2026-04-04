@@ -8,12 +8,14 @@ import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from loguru import logger
 
 from queue_estimator.config import Settings
-from queue_estimator.main import SharedState
+
+if TYPE_CHECKING:
+    from queue_estimator.main import SharedState
 
 
 @dataclass
@@ -80,7 +82,7 @@ class HubSyncAgent:
     def __init__(
         self,
         settings: Settings,
-        shared_state: SharedState,
+        shared_state: "SharedState",
         peer_cache: PeerCache,
     ) -> None:
         """Initialise agent with dependencies."""

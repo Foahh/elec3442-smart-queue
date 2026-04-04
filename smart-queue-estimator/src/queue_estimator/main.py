@@ -22,8 +22,11 @@ from queue_estimator.database import create_db_and_tables, get_session
 from queue_estimator.db_models import PersonEvent, QueueSnapshot
 from queue_estimator.detection.detector import PersonDetector
 from queue_estimator.detection.zone import QueueZone
+from queue_estimator.analyzer.comfort import compute_comfort_score
 from queue_estimator.display import make_display
+from queue_estimator.display.base import SiteDisplay
 from queue_estimator.schemas import QueueStatusResponse, SensorReading
+from queue_estimator.sync.hub_sync import HubSyncAgent, PeerCache
 
 
 class SharedState:
@@ -125,7 +128,7 @@ def _persist_snapshot(snapshot: QueueSnapshot) -> None:
             session.commit()
 
 
-def camera_loop(settings: Settings, state: SharedState) -> None:
+def camera_loop(settings: Settings, state: SharedState, peer_cache: PeerCache) -> None:
     """Run queue estimation processing loop in a daemon thread."""
 
     use_opencv, use_http = preview_targets(settings)
@@ -134,7 +137,7 @@ def camera_loop(settings: Settings, state: SharedState) -> None:
     zone = QueueZone(settings.queue_zone)
     tracker = QueueStateTracker(settings)
     estimator = WaitTimeEstimator(settings)
-    display = make_display()
+    display = make_display(queue_max_display=settings.queue_max_display)
     snapshot_interval_seconds = 60.0 / max(settings.snapshots_per_minute, 1)
     last_snapshot_time = time.monotonic()
     last_level: str | None = None
@@ -159,6 +162,23 @@ def camera_loop(settings: Settings, state: SharedState) -> None:
                     persons = detector.detect(frame)
                     inference_ms = (time.monotonic() - inference_started_at) * 1000.0
 
+                    # Sensor read (Sense HAT only; NullDisplay has no read_sensors)
+                    if hasattr(display, "read_sensors"):
+                        try:
+                            raw_temp, hum, pres = display.read_sensors()
+                            temp = raw_temp + settings.temp_offset
+                            sensor = SensorReading(
+                                temperature_c=temp,
+                                humidity_pct=hum,
+                                pressure_hpa=pres,
+                            )
+                            state.update_sensors(sensor)
+                        except Exception:
+                            logger.debug("Sensor read failed; skipping")
+                            sensor = state.get_sensors()
+                    else:
+                        sensor = state.get_sensors()
+
                     tracking_started_at = time.monotonic()
                     in_zone_persons = zone.filter_persons(persons, frame.shape[:2])
                     completed_events = tracker.update(in_zone_persons, frame_time)
@@ -175,6 +195,14 @@ def camera_loop(settings: Settings, state: SharedState) -> None:
                     throughput = estimator.throughput_per_minute
                     wait_seconds = estimator.estimate_wait_seconds(queue_length)
                     level = estimator.busyness_level(queue_length)
+
+                    sensors_now = state.get_sensors()
+                    comfort_score, comfort_label = compute_comfort_score(
+                        wait_seconds=wait_seconds,
+                        temperature_c=sensors_now.temperature_c if sensors_now else None,
+                        humidity_pct=sensors_now.humidity_pct if sensors_now else None,
+                        pressure_hpa=sensors_now.pressure_hpa if sensors_now else None,
+                    )
 
                     logger.debug(
                         (
@@ -204,6 +232,8 @@ def camera_loop(settings: Settings, state: SharedState) -> None:
                         estimated_wait_human=_humanize_wait(wait_seconds),
                         throughput_per_minute=throughput,
                         busyness_level=level,
+                        comfort_score=comfort_score,
+                        comfort_label=comfort_label,
                         inference_ms=inference_ms,
                         tracking_ms=tracking_ms,
                         persistence_ms=persistence_ms,
@@ -293,7 +323,22 @@ def camera_loop(settings: Settings, state: SharedState) -> None:
                         )
                         last_snapshot_time = time.monotonic()
 
-                    display.show_level(level)
+                    peers = peer_cache.get_all()
+                    local_snap = SiteDisplay(
+                        busyness_level=level,
+                        queue_length=queue_length,
+                        stale=False,
+                    )
+                    peer_snaps = [
+                        SiteDisplay(
+                            busyness_level=p.busyness_level,
+                            queue_length=p.queue_length,
+                            stale=p.stale,
+                        )
+                        for p in sorted(peers, key=lambda x: x.site_id)
+                        if p.site_id != settings.site_id
+                    ]
+                    display.show_sites([local_snap] + peer_snaps)
                     elapsed = time.monotonic() - loop_started_at
                     target = 1.0 / max(settings.camera_fps, 1)
                     sleep_duration = max(0.0, target - elapsed)
@@ -345,12 +390,24 @@ def main() -> None:
     create_db_and_tables()
 
     shared_state = SharedState()
-    app = create_app(shared_state=shared_state)
+    peer_cache = PeerCache()
+
+    if settings.hub_url:
+        sync_agent = HubSyncAgent(settings, shared_state, peer_cache)
+        sync_thread = threading.Thread(
+            target=sync_agent.run, daemon=True, name="hub-sync-thread"
+        )
+        sync_thread.start()
+        logger.info("Hub sync started → {}", settings.hub_url)
+    else:
+        logger.info("QE_HUB_URL not set — hub sync disabled")
+
+    app = create_app(shared_state=shared_state, peer_cache=peer_cache)
     shared_state.set_broadcaster(app.state.ws_hub.enqueue)
 
     camera_thread = threading.Thread(
         target=camera_loop,
-        args=(settings, shared_state),
+        args=(settings, shared_state, peer_cache),
         daemon=True,
         name="camera-loop-thread",
     )
