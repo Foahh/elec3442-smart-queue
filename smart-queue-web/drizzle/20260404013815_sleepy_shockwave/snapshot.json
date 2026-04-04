@@ -1,0 +1,275 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "id": "a0e08b45-2340-480f-8c0a-85f15ceb077c",
+  "prevIds": [
+    "00000000-0000-0000-0000-000000000000"
+  ],
+  "ddl": [
+    {
+      "name": "site_snapshots",
+      "entityType": "tables"
+    },
+    {
+      "name": "site_status",
+      "entityType": "tables"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": true,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "site_snapshots"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "site_id",
+      "entityType": "columns",
+      "table": "site_snapshots"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "timestamp",
+      "entityType": "columns",
+      "table": "site_snapshots"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "queue_length",
+      "entityType": "columns",
+      "table": "site_snapshots"
+    },
+    {
+      "type": "real",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "estimated_wait_seconds",
+      "entityType": "columns",
+      "table": "site_snapshots"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "busyness_level",
+      "entityType": "columns",
+      "table": "site_snapshots"
+    },
+    {
+      "type": "real",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "comfort_score",
+      "entityType": "columns",
+      "table": "site_snapshots"
+    },
+    {
+      "type": "real",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "temperature_c",
+      "entityType": "columns",
+      "table": "site_snapshots"
+    },
+    {
+      "type": "real",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "humidity_pct",
+      "entityType": "columns",
+      "table": "site_snapshots"
+    },
+    {
+      "type": "real",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "pressure_hpa",
+      "entityType": "columns",
+      "table": "site_snapshots"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "site_id",
+      "entityType": "columns",
+      "table": "site_status"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "display_name",
+      "entityType": "columns",
+      "table": "site_status"
+    },
+    {
+      "type": "real",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "latitude",
+      "entityType": "columns",
+      "table": "site_status"
+    },
+    {
+      "type": "real",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "longitude",
+      "entityType": "columns",
+      "table": "site_status"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "queue_length",
+      "entityType": "columns",
+      "table": "site_status"
+    },
+    {
+      "type": "real",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "estimated_wait_seconds",
+      "entityType": "columns",
+      "table": "site_status"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "busyness_level",
+      "entityType": "columns",
+      "table": "site_status"
+    },
+    {
+      "type": "real",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "comfort_score",
+      "entityType": "columns",
+      "table": "site_status"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "table": "site_status"
+    },
+    {
+      "type": "real",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "temperature_c",
+      "entityType": "columns",
+      "table": "site_status"
+    },
+    {
+      "type": "real",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "humidity_pct",
+      "entityType": "columns",
+      "table": "site_status"
+    },
+    {
+      "type": "real",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "pressure_hpa",
+      "entityType": "columns",
+      "table": "site_status"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "site_snapshots_pk",
+      "table": "site_snapshots",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "site_id"
+      ],
+      "nameExplicit": false,
+      "name": "site_status_pk",
+      "table": "site_status",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        {
+          "value": "site_id",
+          "isExpression": false
+        },
+        {
+          "value": "timestamp",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "idx_snapshots_site_time",
+      "entityType": "indexes",
+      "table": "site_snapshots"
+    }
+  ],
+  "renames": []
+}
