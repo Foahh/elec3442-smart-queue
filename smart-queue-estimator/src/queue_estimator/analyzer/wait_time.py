@@ -53,12 +53,12 @@ class WaitTimeEstimator:
             return self._settings.max_wait_seconds
         return (float(queue_length) / throughput) * 60.0
 
-    def busyness_level(self, queue_length: int) -> Literal["green", "yellow", "red"]:
+    def busyness_level(self, queue_length: int) -> Literal["low", "medium", "high"]:
         """Map queue length to busyness level."""
 
         if queue_length <= self._settings.led_green_max:
-            return "green"
+            return "low"
         if queue_length <= self._settings.led_yellow_max:
-            return "yellow"
-        return "red"
+            return "medium"
+        return "high"
 

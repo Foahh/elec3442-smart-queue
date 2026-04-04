@@ -53,6 +53,20 @@ class Settings(BaseSettings):
     led_green_max: int = 3
     led_yellow_max: int = 8
 
+    # Hub sync
+    hub_url: str = ""
+    hub_api_key: str = ""
+    site_id: str = ""
+    site_display_name: str = ""
+    site_latitude: float | None = None
+    site_longitude: float | None = None
+    hub_push_interval: float = 5.0
+    hub_pull_interval: float = 5.0
+
+    # Sense HAT calibration
+    temp_offset: float = -8.0
+    queue_max_display: int = 16
+
     # API
     api_host: str = "0.0.0.0"
     api_port: int = 8000
