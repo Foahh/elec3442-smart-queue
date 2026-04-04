@@ -1,11 +1,7 @@
 import { drizzle } from "drizzle-orm/d1"
+import { getCloudflareContext } from "@opennextjs/cloudflare"
 
-export interface Env {
-  DB: D1Database
-}
-
-export default {
-  async fetch(request: Request, env: Env) {
-    const db = drizzle(env.DB)
-  },
+export async function getDb() {
+  const { env } = await getCloudflareContext({ async: true })
+  return drizzle((env as any).DB)
 }
