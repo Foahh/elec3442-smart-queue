@@ -3,3 +3,4 @@ __pycache__
 .venv
 *.egg-info/
 condaenv.*.requirements.txt
+docs/superpowers/
