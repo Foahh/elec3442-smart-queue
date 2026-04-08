@@ -72,8 +72,10 @@ function compareSnapshots(
       return cmpNullableNum(a.humidity_pct, b.humidity_pct)
     case "busyness_level":
       return (
-        Math.sign((busynessRank(a.busyness_level) - busynessRank(b.busyness_level)) * mul) ||
-        a.busyness_level.localeCompare(b.busyness_level) * mul
+        Math.sign(
+          (busynessRank(a.busyness_level) - busynessRank(b.busyness_level)) *
+            mul
+        ) || a.busyness_level.localeCompare(b.busyness_level) * mul
       )
     default:
       return 0
@@ -103,7 +105,7 @@ function SortableHead({
       <button
         type="button"
         onClick={() => onSort(columnKey)}
-        className="inline-flex items-center gap-1 rounded-md px-1 py-0.5 -mx-1 -my-0.5 text-left hover:bg-muted/60 transition-colors"
+        className="-mx-1 -my-0.5 inline-flex items-center gap-1 rounded-md px-1 py-0.5 text-left transition-colors hover:bg-muted/60"
       >
         <span>{label}</span>
         {active ? (
@@ -227,7 +229,9 @@ export function HistoryTable({ snapshots, pageSize = 20 }: HistoryTableProps) {
                 <TableCell className="tabular-nums">
                   {formatSnapshotTime(row.timestamp)}
                 </TableCell>
-                <TableCell className="tabular-nums">{row.queue_length}</TableCell>
+                <TableCell className="tabular-nums">
+                  {row.queue_length}
+                </TableCell>
                 <TableCell className="tabular-nums">
                   {formatWaitMinutes(row.estimated_wait_seconds)}
                 </TableCell>

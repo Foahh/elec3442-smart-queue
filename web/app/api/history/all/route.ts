@@ -1,6 +1,5 @@
-import { desc, gte } from "drizzle-orm"
 import { getDb } from "@/lib/db"
-import { siteSnapshots } from "@/lib/schema"
+import { listAllSnapshots } from "@/lib/db/repositories"
 import { parseHistoryQuery } from "@/lib/server/history-query"
 import { mapSnapshotRow } from "@/lib/server/site-records"
 
@@ -10,19 +9,9 @@ export async function GET(request: Request) {
   const { minutes, limit } = parseHistoryQuery(request)
 
   const db = await getDb()
+  const sinceTs = minutes > 0 ? Date.now() - minutes * 60_000 : undefined
 
-  const query = db
-    .select()
-    .from(siteSnapshots)
-    .orderBy(desc(siteSnapshots.timestamp))
-    .limit(limit)
-
-  const rows =
-    minutes > 0
-      ? await query.where(
-          gte(siteSnapshots.timestamp, Date.now() - minutes * 60_000)
-        )
-      : await query
+  const rows = await listAllSnapshots(db, { sinceTs, limit })
 
   return Response.json({
     snapshots: rows.map(mapSnapshotRow),

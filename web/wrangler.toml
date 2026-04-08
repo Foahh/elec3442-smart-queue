@@ -12,5 +12,5 @@ binding = "ASSETS"
 [[ d1_databases ]]
 binding = "DB"
 database_name = "queues"
-database_id = "queues"
-migrations_dir = "drizzle"
+database_id = "e502f4a6-3711-4c00-8f64-5665f72437de"
+migrations_dir = "migrations"

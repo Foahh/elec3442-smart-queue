@@ -1,6 +1,5 @@
-import { and, desc, eq, gte } from "drizzle-orm"
 import { getDb } from "@/lib/db"
-import { siteSnapshots } from "@/lib/schema"
+import { listSnapshotsForSite } from "@/lib/db/repositories"
 import { parseHistoryQuery } from "@/lib/server/history-query"
 import { mapSnapshotRow } from "@/lib/server/site-records"
 
@@ -13,18 +12,12 @@ export async function GET(request: Request) {
     return Response.json({ error: "site_id required" }, { status: 400 })
 
   const db = await getDb()
+  const sinceTs = minutes > 0 ? Date.now() - minutes * 60_000 : undefined
 
-  const conditions = [eq(siteSnapshots.siteId, siteId)]
-  if (minutes > 0) {
-    conditions.push(gte(siteSnapshots.timestamp, Date.now() - minutes * 60_000))
-  }
-
-  const rows = await db
-    .select()
-    .from(siteSnapshots)
-    .where(and(...conditions))
-    .orderBy(desc(siteSnapshots.timestamp))
-    .limit(limit)
+  const rows = await listSnapshotsForSite(db, siteId, {
+    sinceTs,
+    limit,
+  })
 
   return Response.json({
     snapshots: rows.map(mapSnapshotRow),

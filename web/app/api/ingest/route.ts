@@ -1,9 +1,8 @@
 import { getCloudflareEnv, getDb } from "@/lib/db"
-import { siteSnapshots, siteStatus } from "@/lib/schema"
+import { insertSiteSnapshot, upsertSiteStatus } from "@/lib/db/repositories"
 import {
-  buildSiteStatusValues,
-  buildSiteStatusUpdateValues,
-  buildSnapshotValues,
+  buildSiteStatusRow,
+  buildSnapshotInsertRow,
 } from "@/lib/server/site-records"
 import type { IngestPayload } from "@/lib/types"
 
@@ -21,17 +20,11 @@ export async function POST(request: Request) {
 
   const db = await getDb()
   const now = Date.now()
-  const siteStatusValues = buildSiteStatusValues(body, now)
-  const siteStatusUpdateValues = buildSiteStatusUpdateValues(body, now)
+  await upsertSiteStatus(db, buildSiteStatusRow(body, now))
 
-  await db.insert(siteStatus).values(siteStatusValues).onConflictDoUpdate({
-    target: siteStatus.siteId,
-    set: siteStatusUpdateValues,
-  })
-
-  const snapshotValues = buildSnapshotValues(body)
-  if (snapshotValues) {
-    await db.insert(siteSnapshots).values(snapshotValues)
+  const snapshotRow = buildSnapshotInsertRow(body)
+  if (snapshotRow) {
+    await insertSiteSnapshot(db, snapshotRow)
   }
 
   return Response.json({ ok: true })

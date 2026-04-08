@@ -1,4 +1,3 @@
-import { drizzle } from "drizzle-orm/d1"
 import { getCloudflareContext } from "@opennextjs/cloudflare"
 
 export async function getCloudflareEnv() {
@@ -6,7 +5,7 @@ export async function getCloudflareEnv() {
   return env
 }
 
-export async function getDb() {
+export async function getDb(): Promise<D1Database> {
   const env = await getCloudflareEnv()
-  return drizzle(env.DB)
+  return env.DB
 }

@@ -67,8 +67,7 @@ function MetricPill({
 const statVariants = {
   queue:
     "border-l-chart-3/80 bg-gradient-to-br from-chart-3/[0.07] to-card/40 dark:from-chart-3/[0.11]",
-  wait:
-    "border-l-chart-1/80 bg-gradient-to-br from-chart-1/[0.08] to-card/40 dark:from-chart-1/[0.12]",
+  wait: "border-l-chart-1/80 bg-gradient-to-br from-chart-1/[0.08] to-card/40 dark:from-chart-1/[0.12]",
 } as const
 
 function StatCard({
@@ -126,10 +125,7 @@ export function SiteCard({ site }: SiteCardProps) {
     ? "flex h-6 items-center rounded-full border border-border bg-background/80 px-2.5 text-right"
     : "flex h-6 items-center rounded-full border px-2.5 text-right"
 
-  const waitMinutes = Math.max(
-    0,
-    Math.round(site.estimated_wait_seconds / 60)
-  )
+  const waitMinutes = Math.max(0, Math.round(site.estimated_wait_seconds / 60))
 
   const hasEnvironmentMetrics =
     site.temperature_c != null ||
@@ -189,7 +185,7 @@ export function SiteCard({ site }: SiteCardProps) {
         <div className="grid grid-cols-2 gap-2">
           <StatCard icon={Activity} label="Queue" variant="queue">
             <div className="flex min-w-0 items-baseline gap-1">
-              <span className="truncate text-2xl leading-none font-semibold tabular-nums tracking-tight sm:text-3xl">
+              <span className="truncate text-2xl leading-none font-semibold tracking-tight tabular-nums sm:text-3xl">
                 {site.queue_length}
               </span>
               <span className="shrink-0 text-[12px] font-medium text-muted-foreground">
@@ -208,7 +204,7 @@ export function SiteCard({ site }: SiteCardProps) {
                 >
                   ~
                 </span>
-                <span className="min-w-0 truncate text-2xl leading-none font-semibold tabular-nums tracking-tight sm:text-3xl">
+                <span className="min-w-0 truncate text-2xl leading-none font-semibold tracking-tight tabular-nums sm:text-3xl">
                   {waitMinutes}
                 </span>
               </span>
@@ -221,7 +217,7 @@ export function SiteCard({ site }: SiteCardProps) {
 
         {site.comfort_score != null && comfortLabel && comfortTone && (
           <div className="flex w-full justify-center">
-            <div className="inline-flex w-fit max-w-full shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-transparent px-3 py-1 text-sm font-medium transition-colors hover:bg-muted/50">
+            <div className="inline-flex w-fit max-w-full shrink-0 items-center justify-center gap-1.5 rounded-full bg-transparent px-3 py-1 text-sm font-medium whitespace-nowrap transition-colors hover:bg-muted/50">
               {comfortEmoji ? (
                 <span className="text-base leading-none" aria-hidden>
                   {comfortEmoji}
@@ -232,7 +228,9 @@ export function SiteCard({ site }: SiteCardProps) {
                   style={{ backgroundColor: comfortTone }}
                 />
               )}
-              <span style={{ color: comfortTone }}>{`Comfort ${Math.round(site.comfort_score)}%`}</span>
+              <span
+                style={{ color: comfortTone }}
+              >{`Comfort ${Math.round(site.comfort_score)}%`}</span>
             </div>
           </div>
         )}

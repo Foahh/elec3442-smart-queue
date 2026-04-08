@@ -1,95 +1,79 @@
-import type { InferInsertModel, InferSelectModel } from "drizzle-orm"
 import { SITE_STALE_AFTER_MS } from "@/lib/dashboard"
-import { siteSnapshots, siteStatus } from "@/lib/schema"
+import type { SiteSnapshotRow, SiteStatusRow } from "@/lib/db/types"
 import type { IngestPayload, SiteStatus, Snapshot } from "@/lib/types"
-
-type SiteStatusRow = InferSelectModel<typeof siteStatus>
-type SiteSnapshotRow = InferSelectModel<typeof siteSnapshots>
 
 export function mapSiteStatusRow(
   row: SiteStatusRow,
   now = Date.now()
 ): SiteStatus {
   return {
-    site_id: row.siteId,
-    display_name: row.displayName,
+    site_id: row.site_id,
+    display_name: row.display_name,
     latitude: row.latitude,
     longitude: row.longitude,
-    queue_length: row.queueLength,
-    estimated_wait_seconds: row.estimatedWaitSeconds,
-    busyness_level: row.busynessLevel,
-    comfort_score: row.comfortScore,
-    updated_at: row.updatedAt,
-    stale: now - row.updatedAt > SITE_STALE_AFTER_MS,
-    temperature_c: row.temperatureC,
-    humidity_pct: row.humidityPct,
-    pressure_hpa: row.pressureHpa,
+    queue_length: row.queue_length,
+    estimated_wait_seconds: row.estimated_wait_seconds,
+    busyness_level: row.busyness_level,
+    comfort_score: row.comfort_score,
+    updated_at: row.updated_at,
+    stale: now - row.updated_at > SITE_STALE_AFTER_MS,
+    temperature_c: row.temperature_c,
+    humidity_pct: row.humidity_pct,
+    pressure_hpa: row.pressure_hpa,
   }
 }
 
 export function mapSnapshotRow(row: SiteSnapshotRow): Snapshot {
   return {
     id: row.id,
-    site_id: row.siteId,
+    site_id: row.site_id,
     timestamp: row.timestamp,
-    queue_length: row.queueLength,
-    estimated_wait_seconds: row.estimatedWaitSeconds,
-    busyness_level: row.busynessLevel,
-    comfort_score: row.comfortScore,
-    temperature_c: row.temperatureC,
-    humidity_pct: row.humidityPct,
-    pressure_hpa: row.pressureHpa,
+    queue_length: row.queue_length,
+    estimated_wait_seconds: row.estimated_wait_seconds,
+    busyness_level: row.busyness_level,
+    comfort_score: row.comfort_score,
+    temperature_c: row.temperature_c,
+    humidity_pct: row.humidity_pct,
+    pressure_hpa: row.pressure_hpa,
   }
 }
 
-export function buildSiteStatusValues(
+export function buildSiteStatusRow(
   payload: IngestPayload,
   updatedAt: number
-): InferInsertModel<typeof siteStatus> {
+): SiteStatusRow {
   return {
-    siteId: payload.site_id,
-    displayName: payload.display_name,
+    site_id: payload.site_id,
+    display_name: payload.display_name,
     latitude: payload.latitude ?? null,
     longitude: payload.longitude ?? null,
-    queueLength: payload.queue_length,
-    estimatedWaitSeconds: payload.estimated_wait_seconds,
-    busynessLevel: payload.busyness_level,
-    comfortScore: payload.comfort_score ?? null,
-    updatedAt,
-    temperatureC: payload.sensors?.temperature_c ?? null,
-    humidityPct: payload.sensors?.humidity_pct ?? null,
-    pressureHpa: payload.sensors?.pressure_hpa ?? null,
+    queue_length: payload.queue_length,
+    estimated_wait_seconds: payload.estimated_wait_seconds,
+    busyness_level: payload.busyness_level,
+    comfort_score: payload.comfort_score ?? null,
+    updated_at: updatedAt,
+    temperature_c: payload.sensors?.temperature_c ?? null,
+    humidity_pct: payload.sensors?.humidity_pct ?? null,
+    pressure_hpa: payload.sensors?.pressure_hpa ?? null,
   }
 }
 
-export function buildSiteStatusUpdateValues(
-  payload: IngestPayload,
-  updatedAt: number
-) {
-  const { siteId: _siteId, ...updateValues } = buildSiteStatusValues(
-    payload,
-    updatedAt
-  )
-
-  return updateValues
-}
-
-export function buildSnapshotValues(
+export function buildSnapshotInsertRow(
   payload: IngestPayload
-): InferInsertModel<typeof siteSnapshots> | null {
+): Omit<SiteSnapshotRow, "id"> | null {
   if (!payload.snapshot) {
     return null
   }
 
   return {
-    siteId: payload.site_id,
+    site_id: payload.site_id,
     timestamp: payload.snapshot.timestamp,
-    queueLength: payload.snapshot.queue_length,
-    estimatedWaitSeconds: payload.snapshot.estimated_wait_seconds,
-    busynessLevel: payload.snapshot.busyness_level,
-    comfortScore: payload.snapshot.comfort_score ?? null,
-    temperatureC: payload.sensors?.temperature_c ?? null,
-    humidityPct: payload.sensors?.humidity_pct ?? null,
-    pressureHpa: payload.sensors?.pressure_hpa ?? null,
+    queue_length: payload.snapshot.queue_length,
+    estimated_wait_seconds: payload.snapshot.estimated_wait_seconds,
+    busyness_level: payload.snapshot.busyness_level,
+    comfort_score: payload.snapshot.comfort_score ?? null,
+    temperature_c: payload.sensors?.temperature_c ?? null,
+    humidity_pct: payload.sensors?.humidity_pct ?? null,
+    pressure_hpa: payload.sensors?.pressure_hpa ?? null,
   }
 }
