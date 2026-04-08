@@ -1,9 +1,8 @@
 "use client"
 
+import dynamic from "next/dynamic"
 import { useEffect, useMemo, useState } from "react"
 import { DashboardHeader } from "@/components/dashboard-header"
-import { HistorySection } from "@/components/history-section"
-import { QueueChart } from "@/components/queue-chart"
 import { SiteGrid } from "@/components/site-grid"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useLiveDashboard } from "@/hooks/use-dashboard-queries"
@@ -12,6 +11,26 @@ import type { SiteStatus, Snapshot } from "@/lib/types"
 
 const EMPTY_SITES: SiteStatus[] = []
 const EMPTY_SNAPSHOTS: Snapshot[] = []
+
+const TabPanelFallback = () => (
+  <div className="py-10 text-center text-sm text-muted-foreground">
+    Loading…
+  </div>
+)
+
+const QueueChart = dynamic(
+  () =>
+    import("@/components/queue-chart").then((m) => ({ default: m.QueueChart })),
+  { loading: () => <TabPanelFallback /> }
+)
+
+const HistorySection = dynamic(
+  () =>
+    import("@/components/history-section").then((m) => ({
+      default: m.HistorySection,
+    })),
+  { loading: () => <TabPanelFallback /> }
+)
 
 export function DashboardShell() {
   const [selectedSite, setSelectedSite] = useState<string | null>(null)
