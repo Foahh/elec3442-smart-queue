@@ -55,7 +55,7 @@ export function DashboardShell() {
             <TabsTrigger value="history">History</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="chart">
+          <TabsContent value="chart" className="mt-2">
             <QueueChart
               snapshots={chartSnapshots}
               siteIds={siteIds}
@@ -63,7 +63,7 @@ export function DashboardShell() {
             />
           </TabsContent>
 
-          <TabsContent value="history">
+          <TabsContent value="history" className="mt-2">
             <HistorySection
               sites={sites}
               selectedSite={selectedSite}
