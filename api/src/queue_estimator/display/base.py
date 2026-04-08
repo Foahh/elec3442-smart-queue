@@ -9,7 +9,7 @@ from typing import NamedTuple
 class SiteDisplay(NamedTuple):
     """Display data for one site on the LED matrix."""
 
-    busyness_level: str   # "low" | "medium" | "high"
+    busyness_level: str  # "low" | "medium" | "high"
     queue_length: int
     stale: bool
 
@@ -24,7 +24,9 @@ class LEDDisplay(ABC):
     def show_level(self, level: str) -> None:
         """Convenience wrapper: render a single local site."""
 
-        self.show_sites([SiteDisplay(busyness_level=level, queue_length=0, stale=False)])
+        self.show_sites(
+            [SiteDisplay(busyness_level=level, queue_length=0, stale=False)]
+        )
 
     @abstractmethod
     def clear(self) -> None:

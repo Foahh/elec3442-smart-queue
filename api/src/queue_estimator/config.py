@@ -103,4 +103,3 @@ def preview_targets(settings: Settings) -> tuple[bool, bool]:
     if mode == "off":
         return False, False
     raise RuntimeError(f"Unknown preview_mode: {mode}")
-

@@ -37,4 +37,3 @@ def get_session() -> Iterator[Session]:
     # Keep ORM field values available after commit for downstream in-memory use.
     with Session(ENGINE, expire_on_commit=False) as session:
         yield session
-

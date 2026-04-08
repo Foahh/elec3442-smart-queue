@@ -12,6 +12,7 @@ from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
+from queue_estimator.api.state import APIState, PeerCacheLike, SharedStateLike
 from queue_estimator.database import create_db_and_tables
 
 
@@ -82,7 +83,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await dispatcher_task
 
 
-def create_app(shared_state: Any | None = None, peer_cache: Any | None = None) -> FastAPI:
+def create_app(
+    shared_state: SharedStateLike | None = None,
+    peer_cache: PeerCacheLike | None = None,
+) -> FastAPI:
     """Create and configure FastAPI app."""
 
     app = FastAPI(title="Smart Queue Estimator API", lifespan=lifespan)
@@ -93,9 +97,15 @@ def create_app(shared_state: Any | None = None, peer_cache: Any | None = None) -
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    app.state.ws_hub = WebSocketHub()
-    app.state.shared_state = shared_state
-    app.state.peer_cache = peer_cache
+    api_state = APIState(
+        ws_hub=WebSocketHub(),
+        shared_state=shared_state,
+        peer_cache=peer_cache,
+    )
+    app.state.api_state = api_state
+    app.state.ws_hub = api_state.ws_hub
+    app.state.shared_state = api_state.shared_state
+    app.state.peer_cache = api_state.peer_cache
 
     from queue_estimator.api.routes.analytics import router as analytics_router
     from queue_estimator.api.routes.peers import router as peers_router
@@ -105,4 +115,3 @@ def create_app(shared_state: Any | None = None, peer_cache: Any | None = None) -
     app.include_router(analytics_router)
     app.include_router(peers_router)
     return app
-

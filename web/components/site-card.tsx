@@ -2,9 +2,11 @@
 
 import { Droplets, Gauge, Thermometer, Wifi, WifiOff } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import type { SiteStatus } from "@/lib/api"
+import { getComfortLabel, getQueueFillSegments } from "@/lib/dashboard"
+import { formatElapsedSeconds, formatWaitMinutes } from "@/lib/format"
 import { busynessColor } from "@/lib/colors"
 import { comfortColor } from "@/lib/comfort"
+import type { SiteStatus } from "@/lib/types"
 
 interface SiteCardProps {
   site: SiteStatus
@@ -13,15 +15,12 @@ interface SiteCardProps {
 
 export function SiteCard({ site, queueMaxDisplay = 16 }: SiteCardProps) {
   const color = busynessColor(site.busyness_level, site.stale)
-  const filled = Math.min(
-    8,
-    Math.round((site.queue_length / queueMaxDisplay) * 8)
-  )
-  const lastSeen = Math.round((Date.now() - site.updated_at) / 1000)
+  const filled = getQueueFillSegments(site.queue_length, queueMaxDisplay)
+  const comfortLabel =
+    site.comfort_score != null ? getComfortLabel(site.comfort_score) : null
 
   return (
     <Card className="overflow-hidden">
-      {/* color band — same proportional fill as Sense HAT */}
       <div className="flex h-4 w-full">
         {Array.from({ length: 8 }, (_, i) => (
           <div
@@ -50,7 +49,9 @@ export function SiteCard({ site, queueMaxDisplay = 16 }: SiteCardProps) {
           <span className="text-2xl font-bold">{site.queue_length}</span>
           <span className="text-muted-foreground">in queue</span>
           <span className="ml-auto font-medium">
-            ~{Math.round(site.estimated_wait_seconds / 60)} min wait
+            {formatWaitMinutes(site.estimated_wait_seconds, {
+              approximate: true,
+            })}
           </span>
         </div>
 
@@ -61,32 +62,16 @@ export function SiteCard({ site, queueMaxDisplay = 16 }: SiteCardProps) {
           {site.busyness_level.toUpperCase()}
         </div>
 
-        {site.comfort_score != null && (
+        {site.comfort_score != null && comfortLabel && (
           <div className="flex items-center gap-1 text-xs">
             <span className="text-muted-foreground">Comfort:</span>
             <span
               className="font-semibold"
-              style={{
-                color: comfortColor(
-                  site.comfort_score >= 70
-                    ? "comfortable"
-                    : site.comfort_score >= 40
-                      ? "moderate"
-                      : "uncomfortable"
-                ),
-              }}
+              style={{ color: comfortColor(comfortLabel) }}
             >
               {Math.round(site.comfort_score)}
             </span>
-            <span className="text-muted-foreground">
-              (
-              {site.comfort_score >= 70
-                ? "comfortable"
-                : site.comfort_score >= 40
-                  ? "moderate"
-                  : "uncomfortable"}
-              )
-            </span>
+            <span className="text-muted-foreground">({comfortLabel})</span>
           </div>
         )}
 
@@ -117,8 +102,8 @@ export function SiteCard({ site, queueMaxDisplay = 16 }: SiteCardProps) {
 
         <p className="text-xs text-muted-foreground">
           {site.stale
-            ? `Last seen ${lastSeen}s ago`
-            : `Updated ${lastSeen}s ago`}
+            ? `Last seen ${formatElapsedSeconds(site.updated_at)}`
+            : `Updated ${formatElapsedSeconds(site.updated_at)}`}
         </p>
       </CardContent>
     </Card>

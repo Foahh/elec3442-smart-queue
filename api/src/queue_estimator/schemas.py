@@ -64,3 +64,26 @@ class AnalyticsSummary(BaseModel):
     peak_hour: str | None
     hourly_breakdown: list[HourlyStats]
 
+
+class PeerSiteSnapshot(BaseModel):
+    """Peer site snapshot exposed by the API."""
+
+    site_id: str
+    display_name: str
+    queue_length: int
+    estimated_wait_seconds: float
+    busyness_level: str
+    comfort_score: float | None
+    updated_at: int
+    stale: bool
+    temperature_c: float | None = None
+    humidity_pct: float | None = None
+    pressure_hpa: float | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+
+
+class PeerSitesResponse(BaseModel):
+    """Peer site collection response."""
+
+    sites: list[PeerSiteSnapshot]

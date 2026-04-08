@@ -22,7 +22,9 @@ class DetectedPerson:
     center: tuple[float, float]
 
 
-def _iou_xyxy(a: tuple[float, float, float, float], b: tuple[float, float, float, float]) -> float:
+def _iou_xyxy(
+    a: tuple[float, float, float, float], b: tuple[float, float, float, float]
+) -> float:
     ax1, ay1, ax2, ay2 = a
     bx1, by1, bx2, by2 = b
     inter_x1 = max(ax1, bx1)
@@ -153,14 +155,21 @@ class _NcnnYoloPersonDetector:
             boxes_xyxy.append((x1, y1, x2, y2))
             scores.append(score)
 
-        keep = _nms_xyxy(boxes_xyxy, scores, iou_threshold=float(self._settings.yolo_iou))
+        keep = _nms_xyxy(
+            boxes_xyxy, scores, iou_threshold=float(self._settings.yolo_iou)
+        )
         kept_boxes = [boxes_xyxy[i] for i in keep]
         kept_scores = [scores[i] for i in keep]
         if not kept_boxes:
             tracked = self._tracker.update(np.empty((0, 5), dtype=np.float64))
         else:
             dets = np.array(
-                [[x1, y1, x2, y2, s] for (x1, y1, x2, y2), s in zip(kept_boxes, kept_scores, strict=False)],
+                [
+                    [x1, y1, x2, y2, s]
+                    for (x1, y1, x2, y2), s in zip(
+                        kept_boxes, kept_scores, strict=False
+                    )
+                ],
                 dtype=np.float64,
             )
             tracked = self._tracker.update(dets)
@@ -240,7 +249,9 @@ class PersonDetector:
         try:
             if model_path.exists():
                 logger.info("Loading NCNN model via ncnn runtime from {}", model_path)
-                self._model = _NcnnYoloPersonDetector(settings=settings, model_dir=model_path)
+                self._model = _NcnnYoloPersonDetector(
+                    settings=settings, model_dir=model_path
+                )
             else:
                 raise FileNotFoundError(
                     f"NCNN model directory not found: {model_path}. "
@@ -255,4 +266,3 @@ class PersonDetector:
         """Run detection + lightweight tracking and return tracked persons."""
 
         return self._model.detect(frame)
-

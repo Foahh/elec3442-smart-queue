@@ -187,7 +187,9 @@ def camera_loop(settings: Settings, state: SharedState, peer_cache: PeerCache) -
                     persistence_ms = 0.0
                     persistence_started_at = time.monotonic()
                     _persist_person_events(completed_events)
-                    persistence_ms += (time.monotonic() - persistence_started_at) * 1000.0
+                    persistence_ms += (
+                        time.monotonic() - persistence_started_at
+                    ) * 1000.0
                     for event in completed_events:
                         estimator.add_event(event)
 
@@ -199,7 +201,9 @@ def camera_loop(settings: Settings, state: SharedState, peer_cache: PeerCache) -
                     sensors_now = state.get_sensors()
                     comfort_score, comfort_label = compute_comfort_score(
                         wait_seconds=wait_seconds,
-                        temperature_c=sensors_now.temperature_c if sensors_now else None,
+                        temperature_c=sensors_now.temperature_c
+                        if sensors_now
+                        else None,
                         humidity_pct=sensors_now.humidity_pct if sensors_now else None,
                         pressure_hpa=sensors_now.pressure_hpa if sensors_now else None,
                     )
@@ -218,11 +222,15 @@ def camera_loop(settings: Settings, state: SharedState, peer_cache: PeerCache) -
                         persistence_ms,
                     )
 
-                    end_to_end_latency_ms = (time.monotonic() - loop_started_at) * 1000.0
+                    end_to_end_latency_ms = (
+                        time.monotonic() - loop_started_at
+                    ) * 1000.0
                     effective_fps = 1000.0 / max(end_to_end_latency_ms, 0.001)
 
                     if level != last_level:
-                        logger.info("Busyness level transition: {} -> {}", last_level, level)
+                        logger.info(
+                            "Busyness level transition: {} -> {}", last_level, level
+                        )
                         last_level = level
 
                     status = QueueStatusResponse(
@@ -244,18 +252,24 @@ def camera_loop(settings: Settings, state: SharedState, peer_cache: PeerCache) -
 
                     # create visualization frame with bounding boxes and zone
                     vis_frame = frame.copy()
-                    zone_points =settings.queue_zone
+                    zone_points = settings.queue_zone
                     if zone_points and len(zone_points) >= 3:
                         pts = np.array(zone_points, np.int32).reshape((-1, 1, 2))
-                        cv2.polylines(vis_frame, [pts], True, color=(0, 255, 255), thickness=2)
+                        cv2.polylines(
+                            vis_frame, [pts], True, color=(0, 255, 255), thickness=2
+                        )
 
                     # draw boxes for all persons
                     for person in persons:
                         x1, y1, x2, y2 = [int(coord) for coord in person.bbox_xyxy]
-                        color = (0, 255, 0) if person in in_zone_persons else (0, 0, 255)
-                        cv2.rectangle(vis_frame, (x1, y1), (x2, y2), color=color, thickness=2)
+                        color = (
+                            (0, 255, 0) if person in in_zone_persons else (0, 0, 255)
+                        )
+                        cv2.rectangle(
+                            vis_frame, (x1, y1), (x2, y2), color=color, thickness=2
+                        )
                         # add track ID
-                        if hasattr(person, 'track_id') and person.track_id is not None:
+                        if hasattr(person, "track_id") and person.track_id is not None:
                             cv2.putText(
                                 vis_frame,
                                 f"ID {person.track_id}",
@@ -265,16 +279,36 @@ def camera_loop(settings: Settings, state: SharedState, peer_cache: PeerCache) -
                                 color,
                                 1,
                             )
-                    
+
                     # Add status overlay
                     status_text = f"Queue: {queue_length} | Wait: {wait_seconds:.0f}s | Level: {level.upper()} | FPS: {effective_fps:.1f}"
-                    cv2.putText(vis_frame, status_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+                    cv2.putText(
+                        vis_frame,
+                        status_text,
+                        (10, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.7,
+                        (255, 255, 255),
+                        2,
+                    )
                     time_str = frame_time.strftime("%Y-%m-%d %H:%M:%S")
-                    cv2.putText(vis_frame, time_str, (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                    cv2.putText(
+                        vis_frame,
+                        time_str,
+                        (10, 60),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.5,
+                        (255, 255, 255),
+                        1,
+                    )
 
-                    resized_frame = cv2.resize(vis_frame, (DISPLAY_WIDTH, DISPLAY_HEIGHT))
+                    resized_frame = cv2.resize(
+                        vis_frame, (DISPLAY_WIDTH, DISPLAY_HEIGHT)
+                    )
                     if use_http:
-                        ok, buf = cv2.imencode(".jpg", resized_frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
+                        ok, buf = cv2.imencode(
+                            ".jpg", resized_frame, [cv2.IMWRITE_JPEG_QUALITY, 85]
+                        )
                         if ok:
                             state.set_preview_jpeg(buf.tobytes())
                     if use_opencv:
@@ -284,7 +318,9 @@ def camera_loop(settings: Settings, state: SharedState, peer_cache: PeerCache) -
                             logger.info("ESC pressed, shutting down...")
                             break
 
-                    if (time.monotonic() - last_snapshot_time) >= snapshot_interval_seconds:
+                    if (
+                        time.monotonic() - last_snapshot_time
+                    ) >= snapshot_interval_seconds:
                         snapshot = QueueSnapshot(
                             timestamp=frame_time,
                             queue_length=queue_length,
@@ -294,8 +330,12 @@ def camera_loop(settings: Settings, state: SharedState, peer_cache: PeerCache) -
                         )
                         snapshot_write_started_at = time.monotonic()
                         _persist_snapshot(snapshot)
-                        persistence_ms += (time.monotonic() - snapshot_write_started_at) * 1000.0
-                        end_to_end_latency_ms = (time.monotonic() - loop_started_at) * 1000.0
+                        persistence_ms += (
+                            time.monotonic() - snapshot_write_started_at
+                        ) * 1000.0
+                        end_to_end_latency_ms = (
+                            time.monotonic() - loop_started_at
+                        ) * 1000.0
                         effective_fps = 1000.0 / max(end_to_end_latency_ms, 0.001)
                         status = status.model_copy(
                             update={
@@ -355,7 +395,6 @@ def camera_loop(settings: Settings, state: SharedState, peer_cache: PeerCache) -
             cv2.destroyAllWindows()
 
 
-
 def _configure_logging() -> None:
     """Configure Loguru outputs and file rotation."""
 
@@ -367,7 +406,13 @@ def _configure_logging() -> None:
         backtrace=True,
         diagnose=True,
     )
-    logger.add("logs/queue_estimator.log", rotation="10 MB", level="DEBUG", backtrace=True, diagnose=True)
+    logger.add(
+        "logs/queue_estimator.log",
+        rotation="10 MB",
+        level="DEBUG",
+        backtrace=True,
+        diagnose=True,
+    )
 
 
 def main() -> None:
@@ -417,4 +462,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

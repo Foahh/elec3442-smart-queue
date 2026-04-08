@@ -1,4 +1,5 @@
-import { Geist, Geist_Mono, Noto_Sans } from "next/font/google"
+import type { Metadata } from "next"
+import { Geist_Mono, Noto_Sans } from "next/font/google"
 
 import "./globals.css"
 import { QueryProvider } from "@/components/query-provider"
@@ -11,6 +12,12 @@ const fontMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
 })
+
+export const metadata: Metadata = {
+  title: "Smart Queue Dashboard",
+  description:
+    "Live queue status, history, and comfort metrics for Smart Queue sites.",
+}
 
 export default function RootLayout({
   children,
@@ -28,7 +35,7 @@ export default function RootLayout({
         notoSans.variable
       )}
     >
-      <body>
+      <body className="min-h-screen bg-background text-foreground">
         <ThemeProvider>
           <QueryProvider>{children}</QueryProvider>
         </ThemeProvider>

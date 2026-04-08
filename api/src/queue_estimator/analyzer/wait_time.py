@@ -30,7 +30,9 @@ class WaitTimeEstimator:
 
         if not self._events:
             return
-        cutoff = self._events[-1].exit_time - timedelta(minutes=self._settings.throughput_window_minutes)
+        cutoff = self._events[-1].exit_time - timedelta(
+            minutes=self._settings.throughput_window_minutes
+        )
         while self._events and self._events[0].exit_time < cutoff:
             self._events.popleft()
 
@@ -61,4 +63,3 @@ class WaitTimeEstimator:
         if queue_length <= self._settings.led_yellow_max:
             return "medium"
         return "high"
-

@@ -9,8 +9,9 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import type { Snapshot } from "@/lib/api"
-import { BUSYNESS_COLORS } from "@/lib/colors"
+import { CHART_BUCKET_MS } from "@/lib/dashboard"
+import { formatChartTime } from "@/lib/format"
+import type { Snapshot } from "@/lib/types"
 
 interface QueueChartProps {
   snapshots: Snapshot[]
@@ -44,11 +45,10 @@ export function QueueChart({ snapshots, siteIds, siteNames }: QueueChartProps) {
     [siteIds, siteNames]
   )
 
-  // Bucket snapshots into 5-min intervals, one key per site
   const data = useMemo(() => {
     const buckets: Record<number, Record<string, number>> = {}
     for (const s of snapshots) {
-      const bucket = Math.floor(s.timestamp / 300_000) * 300_000
+      const bucket = Math.floor(s.timestamp / CHART_BUCKET_MS) * CHART_BUCKET_MS
       buckets[bucket] ??= { timestamp: bucket }
       buckets[bucket][s.site_id] = s.queue_length
     }
@@ -56,10 +56,7 @@ export function QueueChart({ snapshots, siteIds, siteNames }: QueueChartProps) {
       .sort((a, b) => (a.timestamp as number) - (b.timestamp as number))
       .map((b) => ({
         ...b,
-        time: new Date(b.timestamp as number).toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
+        time: formatChartTime(b.timestamp as number),
       }))
   }, [snapshots])
 

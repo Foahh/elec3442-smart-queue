@@ -35,8 +35,12 @@ def test_moderate_wait() -> None:
 
 
 def test_env_penalty_reduces_score() -> None:
-    ideal = compute_comfort_score(wait_seconds=60.0, temperature_c=22.0, humidity_pct=50.0, pressure_hpa=1013.0)
-    hot = compute_comfort_score(wait_seconds=60.0, temperature_c=35.0, humidity_pct=80.0, pressure_hpa=1013.0)
+    ideal = compute_comfort_score(
+        wait_seconds=60.0, temperature_c=22.0, humidity_pct=50.0, pressure_hpa=1013.0
+    )
+    hot = compute_comfort_score(
+        wait_seconds=60.0, temperature_c=35.0, humidity_pct=80.0, pressure_hpa=1013.0
+    )
     assert hot[0] < ideal[0]
 
 

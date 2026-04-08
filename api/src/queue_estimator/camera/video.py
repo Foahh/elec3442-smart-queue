@@ -29,7 +29,9 @@ class VideoFileSource(CameraSource):
         """Open configured video file."""
 
         if not self._settings.camera_video_path:
-            raise RuntimeError("QE_CAMERA_VIDEO_PATH must be set when QE_CAMERA_SOURCE=video")
+            raise RuntimeError(
+                "QE_CAMERA_VIDEO_PATH must be set when QE_CAMERA_SOURCE=video"
+            )
 
         video_path = Path(self._settings.camera_video_path)
         if not video_path.exists():

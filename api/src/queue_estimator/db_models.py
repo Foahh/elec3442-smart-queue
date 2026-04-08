@@ -27,4 +27,3 @@ class PersonEvent(SQLModel, table=True):
     exit_time: datetime
     dwell_seconds: float
     date_hour: str
-

@@ -165,7 +165,9 @@ class HubSyncAgent:
                     return
                 raise urllib.error.HTTPError(url, resp.status, "non-200", {}, None)  # type: ignore[arg-type]
         except Exception as exc:
-            logger.warning("Hub push failed: {}; backoff={:.0f}s", exc, self._push_backoff)
+            logger.warning(
+                "Hub push failed: {}; backoff={:.0f}s", exc, self._push_backoff
+            )
             self._push_backoff = min(self._push_backoff * 2, 60.0)
 
     # ------------------------------------------------------------------ pull
@@ -197,5 +199,7 @@ class HubSyncAgent:
             self._peer_cache.update(snapshots)
             self._pull_backoff = self._settings.hub_pull_interval
         except Exception as exc:
-            logger.warning("Hub pull failed: {}; backoff={:.0f}s", exc, self._pull_backoff)
+            logger.warning(
+                "Hub pull failed: {}; backoff={:.0f}s", exc, self._pull_backoff
+            )
             self._pull_backoff = min(self._pull_backoff * 2, 60.0)

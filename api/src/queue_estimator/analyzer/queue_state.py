@@ -36,7 +36,9 @@ class QueueStateTracker:
         self._settings = settings
         self._active_tracks: dict[int, TrackRecord] = {}
 
-    def update(self, in_zone_persons: list[TrackedPerson], frame_time: datetime) -> list[PersonEvent]:
+    def update(
+        self, in_zone_persons: list[TrackedPerson], frame_time: datetime
+    ) -> list[PersonEvent]:
         """Update active tracks and return completed events."""
 
         current_track_ids = {person.track_id for person in in_zone_persons}
@@ -52,7 +54,11 @@ class QueueStateTracker:
                 record.last_seen = frame_time
 
         completed: list[PersonEvent] = []
-        departed_ids = [track_id for track_id in self._active_tracks if track_id not in current_track_ids]
+        departed_ids = [
+            track_id
+            for track_id in self._active_tracks
+            if track_id not in current_track_ids
+        ]
         for track_id in departed_ids:
             record = self._active_tracks.pop(track_id)
             exit_time = frame_time
@@ -78,4 +84,3 @@ class QueueStateTracker:
         """Return current active queue length."""
 
         return len(self._active_tracks)
-

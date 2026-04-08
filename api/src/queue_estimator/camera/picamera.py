@@ -26,7 +26,9 @@ class PiCameraSource(CameraSource):
         try:
             from picamera2 import Picamera2
         except ImportError as exc:
-            raise RuntimeError("picamera2 not installed — on Raspberry Pi run: pip install picamera2") from exc
+            raise RuntimeError(
+                "picamera2 not installed — on Raspberry Pi run: pip install picamera2"
+            ) from exc
 
         self._camera = Picamera2()
         config = self._camera.create_preview_configuration(
@@ -59,4 +61,3 @@ class PiCameraSource(CameraSource):
             self._camera.stop()
             self._camera.close()
             self._camera = None
-

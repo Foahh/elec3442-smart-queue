@@ -30,7 +30,9 @@ class QueueZone:
         scaled[:, 1] *= height
         return scaled.astype(np.float32)
 
-    def contains(self, point_normalized: tuple[float, float], frame_shape: tuple[int, int]) -> bool:
+    def contains(
+        self, point_normalized: tuple[float, float], frame_shape: tuple[int, int]
+    ) -> bool:
         """Return True if point is inside or on polygon boundary."""
 
         polygon = self._to_pixel_polygon(frame_shape)
@@ -47,5 +49,6 @@ class QueueZone:
     ) -> list[DetectedPerson]:
         """Return only persons whose center is inside zone."""
 
-        return [person for person in persons if self.contains(person.center, frame_shape)]
-
+        return [
+            person for person in persons if self.contains(person.center, frame_shape)
+        ]

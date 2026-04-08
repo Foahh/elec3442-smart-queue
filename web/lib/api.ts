@@ -1,36 +1,44 @@
-export interface SiteStatus {
-  site_id: string
-  display_name: string
-  latitude: number | null
-  longitude: number | null
-  queue_length: number
-  estimated_wait_seconds: number
-  busyness_level: string
-  comfort_score: number | null
-  updated_at: number
-  stale: boolean
-  temperature_c: number | null
-  humidity_pct: number | null
-  pressure_hpa: number | null
+import { DASHBOARD_CHART_MINUTES } from "@/lib/dashboard"
+import type {
+  HistoryResponse,
+  SiteStatus,
+  SitesResponse,
+  Snapshot,
+} from "@/lib/types"
+
+interface DashboardData {
+  sites: SiteStatus[]
+  chartSnapshots: Snapshot[]
 }
 
-export interface Snapshot {
-  id: number
-  site_id: string
-  timestamp: number
-  queue_length: number
-  estimated_wait_seconds: number
-  busyness_level: string
-  comfort_score: number | null
-  temperature_c: number | null
-  humidity_pct: number | null
-  pressure_hpa: number | null
+interface ErrorResponse {
+  error?: string
+}
+
+async function fetchJson<T>(input: string, fallbackMessage: string) {
+  const res = await fetch(input, { cache: "no-store" })
+
+  if (!res.ok) {
+    throw new Error(await getErrorMessage(res, fallbackMessage))
+  }
+
+  return (await res.json()) as T
+}
+
+async function getErrorMessage(res: Response, fallbackMessage: string) {
+  try {
+    const data = (await res.json()) as ErrorResponse
+    return data.error ?? fallbackMessage
+  } catch {
+    return fallbackMessage
+  }
 }
 
 export async function fetchSites(): Promise<SiteStatus[]> {
-  const res = await fetch("/api/sites")
-  if (!res.ok) throw new Error("Failed to fetch sites")
-  const data = (await res.json()) as { sites: SiteStatus[] }
+  const data = await fetchJson<SitesResponse>(
+    "/api/sites",
+    "Failed to fetch sites"
+  )
   return data.sites
 }
 
@@ -44,15 +52,26 @@ export async function fetchHistory(
     minutes: String(minutes),
     limit: String(limit),
   })
-  const res = await fetch(`/api/history?${params}`)
-  if (!res.ok) throw new Error("Failed to fetch history")
-  const data = (await res.json()) as { snapshots: Snapshot[] }
+  const data = await fetchJson<HistoryResponse>(
+    `/api/history?${params}`,
+    "Failed to fetch history"
+  )
   return data.snapshots
 }
 
 export async function fetchHistoryAll(minutes = 60): Promise<Snapshot[]> {
-  const res = await fetch(`/api/history/all?minutes=${minutes}`)
-  if (!res.ok) throw new Error("Failed to fetch history/all")
-  const data = (await res.json()) as { snapshots: Snapshot[] }
+  const data = await fetchJson<HistoryResponse>(
+    `/api/history/all?minutes=${minutes}`,
+    "Failed to fetch history"
+  )
   return data.snapshots
+}
+
+export async function fetchDashboardData(): Promise<DashboardData> {
+  const [sites, chartSnapshots] = await Promise.all([
+    fetchSites(),
+    fetchHistoryAll(DASHBOARD_CHART_MINUTES),
+  ])
+
+  return { sites, chartSnapshots }
 }

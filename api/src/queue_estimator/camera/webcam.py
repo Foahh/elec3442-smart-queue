@@ -24,9 +24,13 @@ class WebcamSource(CameraSource):
 
         self._capture = cv2.VideoCapture(self._settings.camera_index)
         if not self._capture.isOpened():
-            raise RuntimeError(f"Unable to open webcam index {self._settings.camera_index}")
+            raise RuntimeError(
+                f"Unable to open webcam index {self._settings.camera_index}"
+            )
         self._capture.set(cv2.CAP_PROP_FRAME_WIDTH, float(self._settings.camera_width))
-        self._capture.set(cv2.CAP_PROP_FRAME_HEIGHT, float(self._settings.camera_height))
+        self._capture.set(
+            cv2.CAP_PROP_FRAME_HEIGHT, float(self._settings.camera_height)
+        )
 
     def read_frame(self) -> np.ndarray | None:
         """Read one frame from webcam."""
@@ -45,4 +49,3 @@ class WebcamSource(CameraSource):
         if self._capture is not None:
             self._capture.release()
             self._capture = None
-

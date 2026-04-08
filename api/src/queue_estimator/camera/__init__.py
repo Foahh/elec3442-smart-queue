@@ -17,4 +17,3 @@ def make_camera(settings: Settings) -> CameraSource:
     if settings.camera_source == "video":
         return VideoFileSource(settings)
     return WebcamSource(settings)
-

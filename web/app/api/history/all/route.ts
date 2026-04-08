@@ -1,13 +1,13 @@
 import { desc, gte } from "drizzle-orm"
 import { getDb } from "@/lib/db"
 import { siteSnapshots } from "@/lib/schema"
+import { parseHistoryQuery } from "@/lib/server/history-query"
+import { mapSnapshotRow } from "@/lib/server/site-records"
 
 export const runtime = "edge"
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const minutes = Number(searchParams.get("minutes") ?? "60")
-  const limit = Math.min(Number(searchParams.get("limit") ?? "500"), 1000)
+  const { minutes, limit } = parseHistoryQuery(request)
 
   const db = await getDb()
 
@@ -25,17 +25,6 @@ export async function GET(request: Request) {
       : await query
 
   return Response.json({
-    snapshots: rows.map((r) => ({
-      id: r.id,
-      site_id: r.siteId,
-      timestamp: r.timestamp,
-      queue_length: r.queueLength,
-      estimated_wait_seconds: r.estimatedWaitSeconds,
-      busyness_level: r.busynessLevel,
-      comfort_score: r.comfortScore,
-      temperature_c: r.temperatureC,
-      humidity_pct: r.humidityPct,
-      pressure_hpa: r.pressureHpa,
-    })),
+    snapshots: rows.map(mapSnapshotRow),
   })
 }

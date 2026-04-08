@@ -19,4 +19,3 @@ def get_db_session() -> Iterator[Session]:
 
 
 DBSessionDep = Annotated[Session, Depends(get_db_session)]
-

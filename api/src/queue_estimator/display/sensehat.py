@@ -8,10 +8,10 @@ from queue_estimator.display.base import LEDDisplay, SiteDisplay
 
 
 _COLORS: dict[str, tuple[tuple[int, int, int], tuple[int, int, int]]] = {
-    "low":    ((0, 200, 0),   (0, 20, 0)),
+    "low": ((0, 200, 0), (0, 20, 0)),
     "medium": ((220, 140, 0), (22, 14, 0)),
-    "high":   ((200, 0, 0),   (20, 0, 0)),
-    "stale":  ((0, 0, 80),    (0, 0, 80)),
+    "high": ((200, 0, 0), (20, 0, 0)),
+    "stale": ((0, 0, 80), (0, 0, 80)),
 }
 
 

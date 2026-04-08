@@ -3,14 +3,22 @@ from __future__ import annotations
 """Queue status and live data routes."""
 
 import asyncio
+from collections.abc import AsyncIterator
 from datetime import UTC, datetime, timedelta
 
-from fastapi import APIRouter, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
+from fastapi import (
+    APIRouter,
+    HTTPException,
+    Query,
+    Request,
+    WebSocket,
+    WebSocketDisconnect,
+)
 from fastapi.responses import HTMLResponse, StreamingResponse
-from sqlmodel import Session, desc, select
 
 from queue_estimator.api.dependencies import DBSessionDep
-from queue_estimator.db_models import QueueSnapshot
+from queue_estimator.api.services.queue_history import list_snapshot_records
+from queue_estimator.api.state import get_api_state, require_shared_state
 from queue_estimator.schemas import QueueStatusResponse, SnapshotRecord
 
 router = APIRouter(prefix="/api/v1/queue", tags=["queue"])
@@ -20,25 +28,11 @@ router = APIRouter(prefix="/api/v1/queue", tags=["queue"])
 def get_status(request: Request) -> QueueStatusResponse:
     """Return latest in-memory queue status."""
 
-    shared_state = request.app.state.shared_state
-    if shared_state is None:
-        raise HTTPException(status_code=503, detail="System initializing")
+    shared_state = require_shared_state(request)
     status = shared_state.get()
     if status is None:
         raise HTTPException(status_code=503, detail="System initializing")
     return status
-
-
-def _read_snapshots(session: Session, since: datetime, limit: int) -> list[QueueSnapshot]:
-    """Fetch snapshots from database."""
-
-    statement = (
-        select(QueueSnapshot)
-        .where(QueueSnapshot.timestamp >= since)
-        .order_by(desc(QueueSnapshot.timestamp))
-        .limit(limit)
-    )
-    return list(session.execute(statement).scalars())
 
 
 @router.get("/history", response_model=list[SnapshotRecord])
@@ -50,23 +44,14 @@ def get_history(
     """Return queue snapshots over a lookback window."""
 
     since = datetime.now(UTC) - timedelta(minutes=minutes)
-    rows = _read_snapshots(session, since=since, limit=limit)
-    return [
-        SnapshotRecord(
-            timestamp=row.timestamp,
-            queue_length=row.queue_length,
-            estimated_wait_seconds=row.estimated_wait_seconds,
-            busyness_level=row.busyness_level,
-        )
-        for row in rows
-    ]
+    return list_snapshot_records(session, since=since, limit=limit)
 
 
 @router.websocket("/live")
 async def live_status(websocket: WebSocket) -> None:
     """Stream live queue status updates to websocket clients."""
 
-    hub = websocket.app.state.ws_hub
+    hub = websocket.app.state.api_state.ws_hub
     await hub.connect(websocket)
     try:
         while True:
@@ -99,11 +84,11 @@ def preview_page() -> str:
 async def preview_stream(request: Request) -> StreamingResponse:
     """Multipart MJPEG of the latest annotated frame from the camera thread."""
 
-    async def frames() -> asyncio.AsyncIterator[bytes]:
+    async def frames() -> AsyncIterator[bytes]:
         while True:
             if await request.is_disconnected():
                 break
-            shared = request.app.state.shared_state
+            shared = get_api_state(request).shared_state
             if shared is None:
                 await asyncio.sleep(0.1)
                 continue
@@ -116,4 +101,3 @@ async def preview_stream(request: Request) -> StreamingResponse:
         frames(),
         media_type="multipart/x-mixed-replace; boundary=frame",
     )
-

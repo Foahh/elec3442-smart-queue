@@ -32,4 +32,3 @@ class CameraSource(ABC):
         """Context manager exit."""
 
         self.stop()
-

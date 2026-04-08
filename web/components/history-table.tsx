@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -10,8 +10,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import type { Snapshot } from "@/lib/api"
 import { busynessColor } from "@/lib/colors"
+import { formatSnapshotTime, formatWaitMinutes } from "@/lib/format"
+import type { Snapshot } from "@/lib/types"
 
 interface HistoryTableProps {
   snapshots: Snapshot[]
@@ -26,6 +27,12 @@ export function HistoryTable({ snapshots, pageSize = 20 }: HistoryTableProps) {
     [snapshots]
   )
   const total = sorted.length
+
+  useEffect(() => {
+    const lastPage = Math.max(Math.ceil(total / pageSize) - 1, 0)
+    setPage((current) => Math.min(current, lastPage))
+  }, [pageSize, total])
+
   const slice = sorted.slice(page * pageSize, (page + 1) * pageSize)
 
   if (total === 0) {
@@ -55,11 +62,11 @@ export function HistoryTable({ snapshots, pageSize = 20 }: HistoryTableProps) {
             {slice.map((row) => (
               <TableRow key={row.id}>
                 <TableCell className="font-mono text-xs">
-                  {new Date(row.timestamp).toLocaleString()}
+                  {formatSnapshotTime(row.timestamp)}
                 </TableCell>
                 <TableCell className="text-right">{row.queue_length}</TableCell>
                 <TableCell className="text-right">
-                  {Math.round(row.estimated_wait_seconds / 60)} min
+                  {formatWaitMinutes(row.estimated_wait_seconds)}
                 </TableCell>
                 <TableCell>
                   <span
