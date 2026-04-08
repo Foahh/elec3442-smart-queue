@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -69,14 +70,14 @@ export function HistoryTable({ snapshots, pageSize = 20 }: HistoryTableProps) {
                   {formatWaitMinutes(row.estimated_wait_seconds)}
                 </TableCell>
                 <TableCell>
-                  <span
-                    className="rounded-full px-2 py-0.5 text-xs font-medium text-white"
+                  <Badge
+                    className="h-auto border-0 px-2 py-0.5 text-xs font-medium text-white"
                     style={{
                       backgroundColor: busynessColor(row.busyness_level, false),
                     }}
                   >
                     {row.busyness_level}
-                  </span>
+                  </Badge>
                 </TableCell>
                 <TableCell className="text-right">
                   {row.comfort_score != null
