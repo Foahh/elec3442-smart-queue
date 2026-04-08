@@ -53,7 +53,7 @@ export function HistoryTable({ snapshots, pageSize = 20 }: HistoryTableProps) {
               <TableHead className="text-right">Queue</TableHead>
               <TableHead className="text-right">Wait</TableHead>
               <TableHead>Level</TableHead>
-              <TableHead className="text-right">Comfort</TableHead>
+              <TableHead className="text-right">Comfortness</TableHead>
               <TableHead className="text-right">Temp</TableHead>
               <TableHead className="text-right">Humidity</TableHead>
             </TableRow>
@@ -61,7 +61,7 @@ export function HistoryTable({ snapshots, pageSize = 20 }: HistoryTableProps) {
           <TableBody>
             {slice.map((row) => (
               <TableRow key={row.id}>
-                <TableCell className="font-mono text-xs">
+                <TableCell className="tabular-nums">
                   {formatSnapshotTime(row.timestamp)}
                 </TableCell>
                 <TableCell className="text-right">{row.queue_length}</TableCell>
@@ -80,7 +80,7 @@ export function HistoryTable({ snapshots, pageSize = 20 }: HistoryTableProps) {
                 </TableCell>
                 <TableCell className="text-right">
                   {row.comfort_score != null
-                    ? Math.round(row.comfort_score)
+                    ? `${Math.round(row.comfort_score)}%`
                     : "—"}
                 </TableCell>
                 <TableCell className="text-right">

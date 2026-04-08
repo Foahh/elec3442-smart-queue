@@ -20,7 +20,7 @@ export function HistorySection({
   const historySnapshots = historyQuery.data ?? []
 
   return (
-    <div className="space-y-3 pt-2">
+    <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
         {sites.map((site) => (
           <Button

@@ -1,27 +1,25 @@
-const chartTimeFormatter = new Intl.DateTimeFormat(undefined, {
-  hour: "2-digit",
-  minute: "2-digit",
-})
+function pad2(n: number) {
+  return String(n).padStart(2, "0")
+}
 
-const snapshotTimeFormatter = new Intl.DateTimeFormat(undefined, {
-  dateStyle: "medium",
-  timeStyle: "short",
-})
-
-const lastUpdatedFormatter = new Intl.DateTimeFormat(undefined, {
-  timeStyle: "medium",
-})
+/** Local wall time, fixed shape (not browser-locale wording like "Apr … AM"). */
+function localYmdHm(timestamp: number) {
+  const d = new Date(timestamp)
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`
+}
 
 export function formatChartTime(timestamp: number) {
-  return chartTimeFormatter.format(timestamp)
+  const d = new Date(timestamp)
+  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`
 }
 
 export function formatSnapshotTime(timestamp: number) {
-  return snapshotTimeFormatter.format(timestamp)
+  return localYmdHm(timestamp)
 }
 
 export function formatLastUpdated(timestamp: number) {
-  return lastUpdatedFormatter.format(timestamp)
+  const d = new Date(timestamp)
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`
 }
 
 export function formatWaitMinutes(

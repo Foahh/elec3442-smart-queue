@@ -51,11 +51,11 @@ export function DashboardShell() {
       {sites.length > 0 && (
         <Tabs defaultValue="chart">
           <TabsList>
-            <TabsTrigger value="chart">Queue trend (60 min)</TabsTrigger>
+            <TabsTrigger value="chart">Trend</TabsTrigger>
             <TabsTrigger value="history">History</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="chart" className="pt-2">
+          <TabsContent value="chart">
             <QueueChart
               snapshots={chartSnapshots}
               siteIds={siteIds}

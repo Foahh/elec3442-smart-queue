@@ -19,7 +19,7 @@ export function SiteCard({ site }: SiteCardProps) {
 
   return (
     <Card>
-      <CardHeader className="pb-2">
+      <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold">
             {site.display_name}
@@ -57,7 +57,7 @@ export function SiteCard({ site }: SiteCardProps) {
               className="font-semibold"
               style={{ color: comfortColor(comfortLabel) }}
             >
-              {Math.round(site.comfort_score)}
+              {`${Math.round(site.comfort_score)}%`}
             </span>
             <span className="text-muted-foreground">({comfortLabel})</span>
           </div>

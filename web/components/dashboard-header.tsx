@@ -18,12 +18,7 @@ function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <Button
-        variant="outline"
-        size="icon"
-        disabled
-        aria-label="Toggle theme"
-      >
+      <Button variant="outline" size="icon" disabled aria-label="Toggle theme">
         <Sun className="h-4 w-4 opacity-0" aria-hidden />
       </Button>
     )
