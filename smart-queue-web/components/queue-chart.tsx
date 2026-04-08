@@ -2,7 +2,13 @@
 
 import { useMemo } from "react"
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts"
-import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart"
 import type { Snapshot } from "@/lib/api"
 import { BUSYNESS_COLORS } from "@/lib/colors"
 
@@ -12,7 +18,16 @@ interface QueueChartProps {
   siteNames: Record<string, string>
 }
 
-const SITE_COLORS = ["#00C800", "#DC8C00", "#C80000", "#0088CC", "#AA00FF", "#FF6600", "#00AAAA", "#FF00AA"]
+const SITE_COLORS = [
+  "#00C800",
+  "#DC8C00",
+  "#C80000",
+  "#0088CC",
+  "#AA00FF",
+  "#FF6600",
+  "#00AAAA",
+  "#FF00AA",
+]
 
 export function QueueChart({ snapshots, siteIds, siteNames }: QueueChartProps) {
   const chartConfig = useMemo(
@@ -20,10 +35,13 @@ export function QueueChart({ snapshots, siteIds, siteNames }: QueueChartProps) {
       Object.fromEntries(
         siteIds.map((id, i) => [
           id,
-          { label: siteNames[id] ?? id, color: SITE_COLORS[i % SITE_COLORS.length] },
-        ]),
+          {
+            label: siteNames[id] ?? id,
+            color: SITE_COLORS[i % SITE_COLORS.length],
+          },
+        ])
       ),
-    [siteIds, siteNames],
+    [siteIds, siteNames]
   )
 
   // Bucket snapshots into 5-min intervals, one key per site
@@ -38,12 +56,19 @@ export function QueueChart({ snapshots, siteIds, siteNames }: QueueChartProps) {
       .sort((a, b) => (a.timestamp as number) - (b.timestamp as number))
       .map((b) => ({
         ...b,
-        time: new Date(b.timestamp as number).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        time: new Date(b.timestamp as number).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
       }))
   }, [snapshots])
 
   if (data.length === 0) {
-    return <p className="py-8 text-center text-sm text-muted-foreground">No history data yet</p>
+    return (
+      <p className="py-8 text-center text-sm text-muted-foreground">
+        No history data yet
+      </p>
+    )
   }
 
   return (

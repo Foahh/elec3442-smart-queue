@@ -2,9 +2,7 @@
   "version": "7",
   "dialect": "sqlite",
   "id": "a0e08b45-2340-480f-8c0a-85f15ceb077c",
-  "prevIds": [
-    "00000000-0000-0000-0000-000000000000"
-  ],
+  "prevIds": ["00000000-0000-0000-0000-000000000000"],
   "ddl": [
     {
       "name": "site_snapshots",
@@ -235,18 +233,14 @@
       "table": "site_status"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "site_snapshots_pk",
       "table": "site_snapshots",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "site_id"
-      ],
+      "columns": ["site_id"],
       "nameExplicit": false,
       "name": "site_status_pk",
       "table": "site_status",

@@ -13,7 +13,10 @@ interface SiteCardProps {
 
 export function SiteCard({ site, queueMaxDisplay = 16 }: SiteCardProps) {
   const color = busynessColor(site.busyness_level, site.stale)
-  const filled = Math.min(8, Math.round((site.queue_length / queueMaxDisplay) * 8))
+  const filled = Math.min(
+    8,
+    Math.round((site.queue_length / queueMaxDisplay) * 8)
+  )
   const lastSeen = Math.round((Date.now() - site.updated_at) / 1000)
 
   return (
@@ -31,10 +34,14 @@ export function SiteCard({ site, queueMaxDisplay = 16 }: SiteCardProps) {
 
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-semibold">{site.display_name}</CardTitle>
-          {site.stale
-            ? <WifiOff className="h-4 w-4 text-muted-foreground" />
-            : <Wifi className="h-4 w-4 text-green-500" />}
+          <CardTitle className="text-base font-semibold">
+            {site.display_name}
+          </CardTitle>
+          {site.stale ? (
+            <WifiOff className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <Wifi className="h-4 w-4 text-green-500" />
+          )}
         </div>
       </CardHeader>
 
@@ -59,17 +66,33 @@ export function SiteCard({ site, queueMaxDisplay = 16 }: SiteCardProps) {
             <span className="text-muted-foreground">Comfort:</span>
             <span
               className="font-semibold"
-              style={{ color: comfortColor(site.comfort_score >= 70 ? "comfortable" : site.comfort_score >= 40 ? "moderate" : "uncomfortable") }}
+              style={{
+                color: comfortColor(
+                  site.comfort_score >= 70
+                    ? "comfortable"
+                    : site.comfort_score >= 40
+                      ? "moderate"
+                      : "uncomfortable"
+                ),
+              }}
             >
               {Math.round(site.comfort_score)}
             </span>
             <span className="text-muted-foreground">
-              ({site.comfort_score >= 70 ? "comfortable" : site.comfort_score >= 40 ? "moderate" : "uncomfortable"})
+              (
+              {site.comfort_score >= 70
+                ? "comfortable"
+                : site.comfort_score >= 40
+                  ? "moderate"
+                  : "uncomfortable"}
+              )
             </span>
           </div>
         )}
 
-        {(site.temperature_c != null || site.humidity_pct != null || site.pressure_hpa != null) && (
+        {(site.temperature_c != null ||
+          site.humidity_pct != null ||
+          site.pressure_hpa != null) && (
           <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
             {site.temperature_c != null && (
               <span className="flex items-center gap-1">
@@ -93,7 +116,9 @@ export function SiteCard({ site, queueMaxDisplay = 16 }: SiteCardProps) {
         )}
 
         <p className="text-xs text-muted-foreground">
-          {site.stale ? `Last seen ${lastSeen}s ago` : `Updated ${lastSeen}s ago`}
+          {site.stale
+            ? `Last seen ${lastSeen}s ago`
+            : `Updated ${lastSeen}s ago`}
         </p>
       </CardContent>
     </Card>

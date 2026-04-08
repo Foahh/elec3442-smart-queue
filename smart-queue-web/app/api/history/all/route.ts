@@ -17,9 +17,12 @@ export async function GET(request: Request) {
     .orderBy(desc(siteSnapshots.timestamp))
     .limit(limit)
 
-  const rows = minutes > 0
-    ? await query.where(gte(siteSnapshots.timestamp, Date.now() - minutes * 60_000))
-    : await query
+  const rows =
+    minutes > 0
+      ? await query.where(
+          gte(siteSnapshots.timestamp, Date.now() - minutes * 60_000)
+        )
+      : await query
 
   return Response.json({
     snapshots: rows.map((r) => ({

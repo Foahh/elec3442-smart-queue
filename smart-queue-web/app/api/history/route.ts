@@ -7,7 +7,8 @@ export const runtime = "edge"
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const siteId = searchParams.get("site_id")
-  if (!siteId) return Response.json({ error: "site_id required" }, { status: 400 })
+  if (!siteId)
+    return Response.json({ error: "site_id required" }, { status: 400 })
 
   const minutes = Number(searchParams.get("minutes") ?? "60")
   const limit = Math.min(Number(searchParams.get("limit") ?? "500"), 1000)

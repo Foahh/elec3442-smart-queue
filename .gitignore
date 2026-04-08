@@ -5,4 +5,4 @@ __pycache__
 condaenv.*.requirements.txt
 docs/superpowers/
 .worktrees/
-.worktrees/
+datasets/

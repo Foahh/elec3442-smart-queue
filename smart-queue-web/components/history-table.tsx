@@ -2,7 +2,14 @@
 
 import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import type { Snapshot } from "@/lib/api"
 import { busynessColor } from "@/lib/colors"
 
@@ -16,13 +23,17 @@ export function HistoryTable({ snapshots, pageSize = 20 }: HistoryTableProps) {
 
   const sorted = useMemo(
     () => [...snapshots].sort((a, b) => b.timestamp - a.timestamp),
-    [snapshots],
+    [snapshots]
   )
   const total = sorted.length
   const slice = sorted.slice(page * pageSize, (page + 1) * pageSize)
 
   if (total === 0) {
-    return <p className="py-8 text-center text-sm text-muted-foreground">No history records</p>
+    return (
+      <p className="py-8 text-center text-sm text-muted-foreground">
+        No history records
+      </p>
+    )
   }
 
   return (
@@ -53,19 +64,27 @@ export function HistoryTable({ snapshots, pageSize = 20 }: HistoryTableProps) {
                 <TableCell>
                   <span
                     className="rounded-full px-2 py-0.5 text-xs font-medium text-white"
-                    style={{ backgroundColor: busynessColor(row.busyness_level, false) }}
+                    style={{
+                      backgroundColor: busynessColor(row.busyness_level, false),
+                    }}
                   >
                     {row.busyness_level}
                   </span>
                 </TableCell>
                 <TableCell className="text-right">
-                  {row.comfort_score != null ? Math.round(row.comfort_score) : "—"}
+                  {row.comfort_score != null
+                    ? Math.round(row.comfort_score)
+                    : "—"}
                 </TableCell>
                 <TableCell className="text-right">
-                  {row.temperature_c != null ? `${row.temperature_c.toFixed(1)}°C` : "—"}
+                  {row.temperature_c != null
+                    ? `${row.temperature_c.toFixed(1)}°C`
+                    : "—"}
                 </TableCell>
                 <TableCell className="text-right">
-                  {row.humidity_pct != null ? `${row.humidity_pct.toFixed(0)}%` : "—"}
+                  {row.humidity_pct != null
+                    ? `${row.humidity_pct.toFixed(0)}%`
+                    : "—"}
                 </TableCell>
               </TableRow>
             ))}
@@ -75,7 +94,12 @@ export function HistoryTable({ snapshots, pageSize = 20 }: HistoryTableProps) {
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>{total} records</span>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page === 0}
+            onClick={() => setPage((p) => p - 1)}
+          >
             Previous
           </Button>
           <span className="px-2 py-1">

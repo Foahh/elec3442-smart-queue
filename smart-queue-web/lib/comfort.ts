@@ -1,8 +1,8 @@
 export type ComfortLabel = "comfortable" | "moderate" | "uncomfortable"
 
 export const COMFORT_COLORS: Record<ComfortLabel, string> = {
-  comfortable:   "#00C800",
-  moderate:      "#DC8C00",
+  comfortable: "#00C800",
+  moderate: "#DC8C00",
   uncomfortable: "#C80000",
 }
 

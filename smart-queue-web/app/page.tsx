@@ -53,7 +53,9 @@ export default function Page() {
       .catch(() => setHistorySnapshots([]))
   }, [selectedSite])
 
-  const siteNames = Object.fromEntries(sites.map((s) => [s.site_id, s.display_name]))
+  const siteNames = Object.fromEntries(
+    sites.map((s) => [s.site_id, s.display_name])
+  )
   const siteIds = sites.map((s) => s.site_id)
 
   return (
@@ -74,7 +76,11 @@ export default function Page() {
           size="icon"
           onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
         >
-          {resolvedTheme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          {resolvedTheme === "dark" ? (
+            <Sun className="h-4 w-4" />
+          ) : (
+            <Moon className="h-4 w-4" />
+          )}
         </Button>
       </div>
 
@@ -107,7 +113,7 @@ export default function Page() {
             />
           </TabsContent>
 
-          <TabsContent value="history" className="pt-2 space-y-3">
+          <TabsContent value="history" className="space-y-3 pt-2">
             {/* Site selector */}
             <div className="flex flex-wrap gap-2">
               {sites.map((s) => (
