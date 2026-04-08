@@ -1,7 +1,8 @@
 "use client"
 
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
-import { Badge } from "@/components/ui/badge"
+import { BusynessBadge } from "@/components/busyness-badge"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -11,7 +12,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { busynessColor } from "@/lib/colors"
 import { formatSnapshotTime, formatWaitMinutes } from "@/lib/format"
 import type { Snapshot } from "@/lib/types"
 
@@ -20,14 +20,125 @@ interface HistoryTableProps {
   pageSize?: number
 }
 
+type HistorySortKey =
+  | "timestamp"
+  | "queue_length"
+  | "estimated_wait_seconds"
+  | "busyness_level"
+  | "comfort_score"
+  | "temperature_c"
+  | "humidity_pct"
+
+type SortDir = "asc" | "desc"
+
+function busynessRank(level: string): number {
+  switch (level.toLowerCase()) {
+    case "low":
+      return 0
+    case "medium":
+      return 1
+    case "high":
+      return 2
+    default:
+      return 3
+  }
+}
+
+function compareSnapshots(
+  a: Snapshot,
+  b: Snapshot,
+  key: HistorySortKey,
+  dir: SortDir
+): number {
+  const mul = dir === "asc" ? 1 : -1
+
+  const cmpNullableNum = (x: number | null, y: number | null) => {
+    if (x == null && y == null) return 0
+    if (x == null) return 1
+    if (y == null) return -1
+    return Math.sign(x - y) * mul
+  }
+
+  switch (key) {
+    case "timestamp":
+    case "queue_length":
+    case "estimated_wait_seconds":
+      return Math.sign((a[key] - b[key]) * mul)
+    case "comfort_score":
+      return cmpNullableNum(a.comfort_score, b.comfort_score)
+    case "temperature_c":
+      return cmpNullableNum(a.temperature_c, b.temperature_c)
+    case "humidity_pct":
+      return cmpNullableNum(a.humidity_pct, b.humidity_pct)
+    case "busyness_level":
+      return (
+        Math.sign((busynessRank(a.busyness_level) - busynessRank(b.busyness_level)) * mul) ||
+        a.busyness_level.localeCompare(b.busyness_level) * mul
+      )
+    default:
+      return 0
+  }
+}
+
+function SortableHead({
+  label,
+  columnKey,
+  currentKey,
+  dir,
+  onSort,
+}: {
+  label: string
+  columnKey: HistorySortKey
+  currentKey: HistorySortKey
+  dir: SortDir
+  onSort: (key: HistorySortKey) => void
+}) {
+  const active = currentKey === columnKey
+  return (
+    <TableHead
+      aria-sort={
+        active ? (dir === "asc" ? "ascending" : "descending") : undefined
+      }
+    >
+      <button
+        type="button"
+        onClick={() => onSort(columnKey)}
+        className="inline-flex items-center gap-1 rounded-md px-1 py-0.5 -mx-1 -my-0.5 text-left hover:bg-muted/60 transition-colors"
+      >
+        <span>{label}</span>
+        {active ? (
+          dir === "asc" ? (
+            <ArrowUp className="size-3.5 shrink-0 opacity-70" aria-hidden />
+          ) : (
+            <ArrowDown className="size-3.5 shrink-0 opacity-70" aria-hidden />
+          )
+        ) : (
+          <ArrowUpDown className="size-3.5 shrink-0 opacity-40" aria-hidden />
+        )}
+      </button>
+    </TableHead>
+  )
+}
+
 export function HistoryTable({ snapshots, pageSize = 20 }: HistoryTableProps) {
   const [page, setPage] = useState(0)
+  const [sortKey, setSortKey] = useState<HistorySortKey>("timestamp")
+  const [sortDir, setSortDir] = useState<SortDir>("desc")
 
   const sorted = useMemo(
-    () => [...snapshots].sort((a, b) => b.timestamp - a.timestamp),
-    [snapshots]
+    () =>
+      [...snapshots].sort((a, b) => {
+        const primary = compareSnapshots(a, b, sortKey, sortDir)
+        if (primary !== 0) return primary
+        return b.timestamp - a.timestamp
+      }),
+    [snapshots, sortDir, sortKey]
   )
   const total = sorted.length
+
+  useEffect(() => {
+    setPage(0)
+  }, [sortDir, sortKey])
 
   useEffect(() => {
     const lastPage = Math.max(Math.ceil(total / pageSize) - 1, 0)
@@ -35,6 +146,15 @@ export function HistoryTable({ snapshots, pageSize = 20 }: HistoryTableProps) {
   }, [pageSize, total])
 
   const slice = sorted.slice(page * pageSize, (page + 1) * pageSize)
+
+  const toggleSort = (key: HistorySortKey) => {
+    if (key === sortKey) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"))
+    } else {
+      setSortKey(key)
+      setSortDir("desc")
+    }
+  }
 
   if (total === 0) {
     return (
@@ -50,13 +170,55 @@ export function HistoryTable({ snapshots, pageSize = 20 }: HistoryTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Time</TableHead>
-              <TableHead className="text-right">Queue</TableHead>
-              <TableHead className="text-right">Wait</TableHead>
-              <TableHead>Level</TableHead>
-              <TableHead className="text-right">Comfortness</TableHead>
-              <TableHead className="text-right">Temp</TableHead>
-              <TableHead className="text-right">Humidity</TableHead>
+              <SortableHead
+                label="Time"
+                columnKey="timestamp"
+                currentKey={sortKey}
+                dir={sortDir}
+                onSort={toggleSort}
+              />
+              <SortableHead
+                label="Queue"
+                columnKey="queue_length"
+                currentKey={sortKey}
+                dir={sortDir}
+                onSort={toggleSort}
+              />
+              <SortableHead
+                label="Wait"
+                columnKey="estimated_wait_seconds"
+                currentKey={sortKey}
+                dir={sortDir}
+                onSort={toggleSort}
+              />
+              <SortableHead
+                label="Level"
+                columnKey="busyness_level"
+                currentKey={sortKey}
+                dir={sortDir}
+                onSort={toggleSort}
+              />
+              <SortableHead
+                label="Comfortness"
+                columnKey="comfort_score"
+                currentKey={sortKey}
+                dir={sortDir}
+                onSort={toggleSort}
+              />
+              <SortableHead
+                label="Temp"
+                columnKey="temperature_c"
+                currentKey={sortKey}
+                dir={sortDir}
+                onSort={toggleSort}
+              />
+              <SortableHead
+                label="Humidity"
+                columnKey="humidity_pct"
+                currentKey={sortKey}
+                dir={sortDir}
+                onSort={toggleSort}
+              />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -65,31 +227,24 @@ export function HistoryTable({ snapshots, pageSize = 20 }: HistoryTableProps) {
                 <TableCell className="tabular-nums">
                   {formatSnapshotTime(row.timestamp)}
                 </TableCell>
-                <TableCell className="text-right">{row.queue_length}</TableCell>
-                <TableCell className="text-right">
+                <TableCell className="tabular-nums">{row.queue_length}</TableCell>
+                <TableCell className="tabular-nums">
                   {formatWaitMinutes(row.estimated_wait_seconds)}
                 </TableCell>
                 <TableCell>
-                  <Badge
-                    className="h-auto border-0 px-2 py-0.5 text-xs font-medium text-white"
-                    style={{
-                      backgroundColor: busynessColor(row.busyness_level, false),
-                    }}
-                  >
-                    {row.busyness_level}
-                  </Badge>
+                  <BusynessBadge level={row.busyness_level} />
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="tabular-nums">
                   {row.comfort_score != null
                     ? `${Math.round(row.comfort_score)}%`
                     : "—"}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="tabular-nums">
                   {row.temperature_c != null
                     ? `${row.temperature_c.toFixed(1)}°C`
                     : "—"}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="tabular-nums">
                   {row.humidity_pct != null
                     ? `${row.humidity_pct.toFixed(0)}%`
                     : "—"}

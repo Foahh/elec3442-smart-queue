@@ -7,7 +7,7 @@ export const BUSYNESS_COLORS: Record<
   low: { hex: "#00C800", label: "Low" },
   medium: { hex: "#DC8C00", label: "Medium" },
   high: { hex: "#C80000", label: "High" },
-  stale: { hex: "#000050", label: "Unknown" },
+  stale: { hex: "#000050", label: "???" },
 }
 
 export function busynessColor(level: string, stale: boolean): string {
