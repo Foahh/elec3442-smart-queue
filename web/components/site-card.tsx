@@ -2,7 +2,7 @@
 
 import { Droplets, Gauge, Thermometer, Wifi, WifiOff } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { getComfortLabel, getQueueFillSegments } from "@/lib/dashboard"
+import { getComfortLabel } from "@/lib/dashboard"
 import { formatElapsedSeconds, formatWaitMinutes } from "@/lib/format"
 import { busynessColor } from "@/lib/colors"
 import { comfortColor } from "@/lib/comfort"
@@ -10,27 +10,15 @@ import type { SiteStatus } from "@/lib/types"
 
 interface SiteCardProps {
   site: SiteStatus
-  queueMaxDisplay?: number
 }
 
-export function SiteCard({ site, queueMaxDisplay = 16 }: SiteCardProps) {
+export function SiteCard({ site }: SiteCardProps) {
   const color = busynessColor(site.busyness_level, site.stale)
-  const filled = getQueueFillSegments(site.queue_length, queueMaxDisplay)
   const comfortLabel =
     site.comfort_score != null ? getComfortLabel(site.comfort_score) : null
 
   return (
-    <Card className="overflow-hidden">
-      <div className="flex h-4 w-full">
-        {Array.from({ length: 8 }, (_, i) => (
-          <div
-            key={i}
-            className="flex-1"
-            style={{ backgroundColor: i < filled ? color : color + "1a" }}
-          />
-        ))}
-      </div>
-
+    <Card>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold">

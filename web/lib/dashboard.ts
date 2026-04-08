@@ -11,8 +11,6 @@ export const DASHBOARD_CHART_MINUTES = 60
 export const CHART_BUCKET_MS = 300_000
 export const SITE_STALE_AFTER_MS = 30_000
 
-const SITE_FILL_SEGMENTS = 8
-
 export function getSiteIds(sites: SiteStatus[]) {
   return sites.map((site) => site.site_id)
 }
@@ -20,21 +18,6 @@ export function getSiteIds(sites: SiteStatus[]) {
 export function getSiteNameMap(sites: SiteStatus[]) {
   return Object.fromEntries(
     sites.map((site) => [site.site_id, site.display_name])
-  )
-}
-
-export function getQueueFillSegments(
-  queueLength: number,
-  queueMaxDisplay: number,
-  segmentCount = SITE_FILL_SEGMENTS
-) {
-  if (queueMaxDisplay <= 0) {
-    return 0
-  }
-
-  return Math.min(
-    segmentCount,
-    Math.round((queueLength / queueMaxDisplay) * segmentCount)
   )
 }
 
