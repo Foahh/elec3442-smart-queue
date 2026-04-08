@@ -3,8 +3,14 @@
 import * as React from "react"
 import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes"
 
+const defaultScriptProps =
+  typeof window === "undefined"
+    ? undefined
+    : ({ type: "application/json" } as const)
+
 function ThemeProvider({
   children,
+  scriptProps: scriptPropsProp,
   ...props
 }: React.ComponentProps<typeof NextThemesProvider>) {
   return (
@@ -14,6 +20,7 @@ function ThemeProvider({
       enableSystem
       disableTransitionOnChange
       {...props}
+      scriptProps={scriptPropsProp ?? defaultScriptProps}
     >
       <ThemeHotkey />
       {children}
