@@ -291,13 +291,13 @@ export function getTestDashboardPreview(
       stale: Math.random() < 0.06,
       temperature_c:
         snap?.temperature_c ??
-        Number(jitter(meta.temperature_c, 1.2).toFixed(1)),
+        Number(jitter(meta.temperature_c ?? 23, 1.2).toFixed(1)),
       humidity_pct:
         snap?.humidity_pct ??
-        Math.round(clamp(jitter(meta.humidity_pct, 8), 30, 90)),
+        Math.round(clamp(jitter(meta.humidity_pct ?? 55, 8), 30, 90)),
       pressure_hpa:
         snap?.pressure_hpa ??
-        Math.round(clamp(jitter(meta.pressure_hpa, 3), 1000, 1024)),
+        Math.round(clamp(jitter(meta.pressure_hpa ?? 1013, 3), 1000, 1024)),
       queue_length: snap?.queue_length ?? randomInt(0, 12),
       estimated_wait_seconds:
         snap?.estimated_wait_seconds ?? randomInt(0, 12) * 40,
