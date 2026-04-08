@@ -221,12 +221,9 @@ export function SiteCard({ site }: SiteCardProps) {
 
         {site.comfort_score != null && comfortLabel && comfortTone && (
           <div className="flex w-full justify-center">
-            <div
-              className="flex min-w-0 w-[calc((100%-0.5rem)/2)] items-center justify-center gap-1.5 rounded-full bg-transparent px-2.5 py-1 text-xs font-medium transition-colors hover:bg-muted/50"
-              style={{ color: comfortTone }}
-            >
+            <div className="inline-flex w-fit max-w-full shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-transparent px-3 py-1 text-sm font-medium transition-colors hover:bg-muted/50">
               {comfortEmoji ? (
-                <span className="text-[15px] leading-none" aria-hidden>
+                <span className="text-base leading-none" aria-hidden>
                   {comfortEmoji}
                 </span>
               ) : (
@@ -235,7 +232,7 @@ export function SiteCard({ site }: SiteCardProps) {
                   style={{ backgroundColor: comfortTone }}
                 />
               )}
-              {`Comfort ${Math.round(site.comfort_score)}%`}
+              <span style={{ color: comfortTone }}>{`Comfort ${Math.round(site.comfort_score)}%`}</span>
             </div>
           </div>
         )}
