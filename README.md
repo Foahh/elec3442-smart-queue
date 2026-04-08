@@ -1,6 +1,6 @@
 # elec3442-smart-queue
 
-Queue length and wait-time estimation from camera feeds. The runnable application lives in **[smart-queue-estimator](smart-queue-estimator/)** — see that README for setup, configuration, and API details.
+Queue length and wait-time estimation from camera feeds. The runnable application lives in **[pi](pi/)** — see that README for setup, configuration, and API details.
 
 ## Download and export YOLO → NCNN
 
@@ -28,14 +28,14 @@ yolo export model=yolo26n.pt format=ncnn
 
 Copy the generated folder into the estimator’s `models/` directory, for example:
 
-`smart-queue-estimator/models/yolo26n_ncnn_model/`
+`pi/models/yolo26n_ncnn_model/`
 
 ### 3. Optional checks (estimator / NumPy 2 stack)
 
-After copying the NCNN folder, from **smart-queue-estimator** with `conda activate elec3442`:
+After copying the NCNN folder, from **pi** with `conda activate elec3442`:
 
 ```bash
-cd smart-queue-estimator
+cd pi
 yolo predict model='models/yolo26n_ncnn_model' source='https://ultralytics.com/images/bus.jpg'
 yolo benchmark model=yolo26n.pt data=coco128.yaml imgsz=640
 ```
