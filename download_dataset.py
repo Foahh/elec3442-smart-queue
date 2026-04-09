@@ -4,7 +4,7 @@ Download CrowdHuman from Hugging Face and export it in YOLO format.
 
 Requires:
     pip install datasets pillow
-    HF_TOKEN - Create a token at https://huggingface.co/settings/tokens
+    HF_TOKEN (or --hf-token) - Create a token at https://huggingface.co/settings/tokens
 """
 
 from __future__ import annotations
@@ -27,7 +27,6 @@ class ExportConfig:
     dataset_name: str = "sshao0516/CrowdHuman"
     class_name: str = "person"
     class_id: int = 0
-    hf_token_env: str = "HF_TOKEN"
     split_candidates: dict[str, tuple[str, ...]] | None = None
     annotation_list_keys: tuple[str, ...] = (
         "gtboxes",
@@ -71,7 +70,9 @@ def require_env(name: str) -> str:
         return value
     die(
         f"error: {name} must be set for authenticated Hugging Face requests\n"
-        f"  export {name}=...\n"
+        f"  Linux/macOS (bash): export {name}=...\n"
+        f"  Windows (cmd.exe):  set {name}=...\n"
+        f"  Windows (PowerShell): $env:{name}=\"...\"\n"
         "  https://huggingface.co/settings/tokens"
     )
 
@@ -343,8 +344,10 @@ def write_classes_file(out_root: Path, class_name: str) -> None:
     (out_root / "classes.txt").write_text(f"{class_name}\n", encoding="utf-8")
 
 
-def download_and_prepare_crowdhuman(out_root: Path, config: ExportConfig) -> None:
-    token = require_env(config.hf_token_env)
+def download_and_prepare_crowdhuman(
+    out_root: Path, config: ExportConfig, hf_token: str | None = None
+) -> None:
+    token = (hf_token or "").strip() or require_env("HF_TOKEN")
     out_root.mkdir(parents=True, exist_ok=True)
     write_classes_file(out_root, config.class_name)
 
@@ -396,9 +399,9 @@ def parse_args() -> argparse.Namespace:
         help="YOLO class id written into label files",
     )
     parser.add_argument(
-        "--hf-token-env",
-        default="HF_TOKEN",
-        help="Environment variable used for the Hugging Face access token",
+        "--hf-token",
+        default=None,
+        help="Hugging Face access token (overrides HF_TOKEN env var)",
     )
     return parser.parse_args()
 
@@ -410,11 +413,10 @@ def main() -> None:
         dataset_name=args.dataset_name,
         class_name=args.class_name,
         class_id=args.class_id,
-        hf_token_env=args.hf_token_env,
         max_workers=args.workers,
     )
     print(f"Writing CrowdHuman YOLO dataset under {out_root}")
-    download_and_prepare_crowdhuman(out_root, config)
+    download_and_prepare_crowdhuman(out_root, config, hf_token=args.hf_token)
 
 
 if __name__ == "__main__":
