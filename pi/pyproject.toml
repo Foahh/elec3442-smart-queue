@@ -14,6 +14,8 @@ dependencies = [
     "pydantic-settings>=2.13.1",
     "sqlmodel>=0.0.37",
     "opencv-python-headless>=4.13",
+    "torch>=2.0",
+    "torchvision>=0.15",
     "ultralytics>=8.4.36",
 ]
 
@@ -34,3 +36,14 @@ where = ["src"]
 
 [tool.setuptools]
 py-modules = ["config", "database", "db_models", "main", "schemas"]
+
+# PyPI serves CUDA-enabled torch on Linux; Raspberry Pi needs CPU wheels from PyTorch.
+# https://docs.astral.sh/uv/guides/integration/pytorch/
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu" }]
+torchvision = [{ index = "pytorch-cpu" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
