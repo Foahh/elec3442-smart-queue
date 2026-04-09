@@ -133,7 +133,7 @@ export function SiteCard({ site }: SiteCardProps) {
     site.pressure_hpa != null
 
   return (
-    <Card className="relative h-full gap-3 border border-border/70 bg-gradient-to-br from-card via-card to-muted/35 pt-5 pb-0 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-xl">
+    <Card className="relative h-full min-w-0 gap-3 border border-border/70 bg-gradient-to-br from-card via-card to-muted/35 pt-5 pb-0 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-xl">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 h-28 blur-3xl"
@@ -145,7 +145,7 @@ export function SiteCard({ site }: SiteCardProps) {
       />
 
       <CardHeader className="relative gap-2 pb-0">
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex min-w-0 w-full items-start justify-between gap-2">
           <div className="min-w-0 flex-1 space-y-2">
             <div className={liveBadgeClassName}>
               <LiveIcon className="h-3.5 w-3.5" />
@@ -159,9 +159,9 @@ export function SiteCard({ site }: SiteCardProps) {
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center whitespace-nowrap">
+          <div className="flex min-w-0 shrink items-center justify-end">
             <div
-              className={busynessCardClassName}
+              className={cn(busynessCardClassName, "min-w-0 max-w-full")}
               style={
                 accentColor
                   ? {

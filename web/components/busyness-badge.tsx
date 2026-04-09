@@ -54,13 +54,13 @@ export function BusynessBadge({
     return (
       <span
         className={cn(
-          "inline-flex items-center gap-1.5 text-[11px] leading-none font-medium tracking-[0.18em] uppercase",
+          "inline-flex w-full min-w-0 max-w-full items-center gap-1.5 text-[11px] leading-none font-medium tracking-[0.18em] uppercase",
           toneClass,
           className
         )}
       >
-        <span className="h-1.5 w-1.5 rounded-full bg-current" />
-        {label}
+        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" />
+        <span className="min-w-0 truncate">{label}</span>
       </span>
     )
   }

@@ -24,7 +24,7 @@ export function SiteGrid({ sites, isPending }: SiteGridProps) {
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {sites.map((site) => (
         <SiteCard key={site.site_id} site={site} />
       ))}
