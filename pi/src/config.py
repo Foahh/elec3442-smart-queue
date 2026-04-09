@@ -28,9 +28,9 @@ class Settings(BaseSettings):
     camera_source: Literal["picamera", "video"] = "picamera"
     camera_index: int = 0
     camera_video_path: str | None = None
-    camera_width: int = 1280
-    camera_height: int = 720
-    camera_fps: int = 10
+    camera_width: int = 640
+    camera_height: int = 640
+    camera_fps: int = 20
 
     # Queue Zone
     queue_zone: list[tuple[float, float]] = [
@@ -70,9 +70,9 @@ class Settings(BaseSettings):
 
     # Preview encoding (MJPEG)
     preview_enabled: bool = True
-    preview_fps: int = 5
+    preview_fps: int = 20
     preview_width: int = 640
-    preview_height: int = 480
+    preview_height: int = 640
     preview_jpeg_quality: int = 70
 
     # Database
