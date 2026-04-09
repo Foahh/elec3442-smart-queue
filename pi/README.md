@@ -58,7 +58,7 @@ QE_YOLO_MODEL=yolo26n.pt
 QE_YOLO_CONFIDENCE=0.4
 QE_YOLO_IOU=0.5
 QE_YOLO_IMGSZ=640
-QE_CAMERA_SOURCE=webcam
+QE_CAMERA_SOURCE=picamera
 QE_CAMERA_INDEX=0
 QE_CAMERA_VIDEO_PATH=
 QE_CAMERA_WIDTH=1280
@@ -124,9 +124,10 @@ QE_SITE_DISPLAY_NAME=Lab queue camera
 
 ## Running
 
-Development machine (webcam):
+Development machine (video file):
 
 ```bash
+QE_CAMERA_SOURCE=video QE_CAMERA_VIDEO_PATH=../video/queue_sample.mp4 \
 uv run smart-queue
 ```
 
