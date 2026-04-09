@@ -39,3 +39,22 @@ cd pi
 yolo predict model='models/yolo26n_ncnn_model' source='https://ultralytics.com/images/bus.jpg'
 yolo benchmark model=yolo26n.pt data=coco128.yaml imgsz=640
 ```
+
+## CrowdHuman workflow
+
+The CrowdHuman pipeline is split into two standalone scripts:
+- [download_dataset.py](/home/fn/elec3442-smart-queue/download_dataset.py) downloads CrowdHuman from Hugging Face and exports YOLO labels
+- [finetune_yolo26.py](/home/fn/elec3442-smart-queue/finetune_yolo26.py) finetunes YOLO26 and optionally exports NCNN artifacts
+
+Typical usage:
+
+```bash
+export HF_TOKEN=...
+python download_dataset.py
+python finetune_yolo26.py
+```
+
+Defaults:
+- dataset root: `./datasets/crowdhuman_person` or `$DATASETS_DIR/crowdhuman_person`
+- pretrained weights: `yolo26n.pt`
+- training output: `results/crowdhuman_yolo26n/`
