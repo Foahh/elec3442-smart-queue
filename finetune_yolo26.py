@@ -211,7 +211,7 @@ def export_ncnn(
     expected_dir = weights.parent / f"{weights.stem}_ncnn_model"
     if expected_dir.is_dir():
         print("Copy for the Pi estimator, e.g.:")
-        print(f"  cp -r {expected_dir} pi/models/")
+        print(f"  cp -r {expected_dir} models/")
 
 
 def run_training_and_export(config: TrainConfig, class_name: str = "person") -> None:

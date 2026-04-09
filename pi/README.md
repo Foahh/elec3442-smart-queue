@@ -32,7 +32,7 @@ This creates `.venv`, installs dependencies from `pyproject.toml`, and registers
 ### Raspberry Pi runtime (inference-only, NCNN)
 
 This project is designed so the Raspberry Pi runs **inference only** using the
-exported NCNN model directory (`models/yolo26n_ncnn_model/`). Do YOLO export on a
+exported NCNN model directory at **`../models/yolo26n_ncnn_model/`** (repository root, sibling of `pi/`). Do YOLO export on a
 development machine, then copy that directory onto the Pi.
 
 Install PiCamera2 and Sense HAT into the same environment:
@@ -45,7 +45,7 @@ Then run commands with `uv run` (see **Running**).
 
 ## Prepare Model (Required Before Running)
 
-Follow **[Download and export YOLO → NCNN](../README.md#download-and-export-yolo--ncnn)** in the repository root README, then copy the generated `yolo26n_ncnn_model` folder into this project’s `models/` directory. The estimator runtime always loads that NCNN directory.
+Follow **[Download and export YOLO → NCNN](../README.md#download-and-export-yolo--ncnn)** in the repository root README, then copy the generated `yolo26n_ncnn_model` folder into **`../models/`** at the repository root. The estimator runtime always loads that NCNN directory.
 
 ## Environment Configuration
 
@@ -121,7 +121,7 @@ uv run smart-queue
 Raspberry Pi (PiCamera2 + Sense HAT + NCNN):
 
 ```bash
-# If NCNN dir is missing, export per ../README.md then copy models/.
+# If NCNN dir is missing, export per ../README.md then copy into ../models/.
 QE_CAMERA_SOURCE=picamera uv run smart-queue
 ```
 

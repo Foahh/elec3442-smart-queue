@@ -26,9 +26,9 @@ yolo export model=yolo26n.pt format=ncnn
 
 **`imgsz`:** Use an integer for square input or `(height, width)` for explicit dimensions. See [Ultralytics NCNN export](https://docs.ultralytics.com/integrations/ncnn/#installation).
 
-Copy the generated folder into the estimator’s `models/` directory, for example:
+Copy the generated folder into the repository’s `models/` directory (next to `pi/`), for example:
 
-`pi/models/yolo26n_ncnn_model/`
+`models/yolo26n_ncnn_model/`
 
 ### 3. Optional checks (estimator / NumPy 2 stack)
 
@@ -36,7 +36,7 @@ After copying the NCNN folder, from **pi** with the estimator environment set up
 
 ```bash
 cd pi
-yolo predict model='models/yolo26n_ncnn_model' source='https://ultralytics.com/images/bus.jpg'
+yolo predict model='../models/yolo26n_ncnn_model' source='https://ultralytics.com/images/bus.jpg'
 yolo benchmark model=yolo26n.pt data=coco128.yaml imgsz=640
 ```
 
