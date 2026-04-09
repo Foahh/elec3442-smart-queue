@@ -83,6 +83,33 @@ def _humanize_wait(seconds: float) -> str:
     return f"~{minutes} min {rem_seconds} sec"
 
 
+def _center_square_crop(frame: np.ndarray) -> np.ndarray:
+    """Return a center-cropped 1:1 square image (mandatory ROI)."""
+
+    h, w = frame.shape[:2]
+    size = int(min(h, w))
+    if size <= 0:
+        return frame
+    x0 = (w - size) // 2
+    y0 = (h - size) // 2
+    return frame[y0 : y0 + size, x0 : x0 + size]
+
+
+def _zone_polygon_pixels(
+    zone_points_normalized: list[tuple[float, float]],
+    frame_shape: tuple[int, int],
+) -> np.ndarray | None:
+    """Convert normalized zone polygon points to pixel coordinates for drawing."""
+
+    if not zone_points_normalized or len(zone_points_normalized) < 3:
+        return None
+    h, w = frame_shape
+    pts = np.array(zone_points_normalized, dtype=np.float32)
+    pts[:, 0] *= float(w)
+    pts[:, 1] *= float(h)
+    return pts.reshape((-1, 1, 2)).astype(np.int32)
+
+
 def _persist_person_events(events: list[PersonEvent]) -> None:
     """Persist completed person events in a short-lived session."""
 
@@ -140,6 +167,9 @@ def camera_loop(settings: Settings, state: SharedState, peer_cache: PeerCache) -
                         logger.warning("Frame read failure from camera source")
                         time.sleep(0.1)
                         continue
+
+                    # Enforced ROI: always use center 1:1 crop for the entire pipeline.
+                    frame = _center_square_crop(frame)
 
                     inference_started_at = time.monotonic()
                     persons = detector.detect(frame)
@@ -235,11 +265,26 @@ def camera_loop(settings: Settings, state: SharedState, peer_cache: PeerCache) -
 
                     # create visualization frame with bounding boxes and zone
                     vis_frame = frame.copy()
-                    zone_points = settings.queue_zone
-                    if zone_points and len(zone_points) >= 3:
-                        pts = np.array(zone_points, np.int32).reshape((-1, 1, 2))
+                    # ROI border (ROI == full cropped frame).
+                    h_vis, w_vis = vis_frame.shape[:2]
+                    cv2.rectangle(
+                        vis_frame,
+                        (0, 0),
+                        (max(w_vis - 1, 0), max(h_vis - 1, 0)),
+                        color=(255, 0, 255),
+                        thickness=2,
+                    )
+
+                    zone_pts = _zone_polygon_pixels(
+                        settings.queue_zone, vis_frame.shape[:2]
+                    )
+                    if zone_pts is not None:
                         cv2.polylines(
-                            vis_frame, [pts], True, color=(0, 255, 255), thickness=2
+                            vis_frame,
+                            [zone_pts],
+                            True,
+                            color=(0, 255, 255),
+                            thickness=2,
                         )
 
                     # draw boxes for all persons
