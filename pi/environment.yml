@@ -4,12 +4,10 @@ channels:
 dependencies:
   - python=3.14
   - pip
-  - fastapi>=0.135.2
   - loguru>=0.7.3
   - numpy>=2.4.3
   - pydantic-settings>=2.13.1
   - sqlmodel>=0.0.37
-  - uvicorn>=0.42.0
   - pip:
       - opencv-python-headless>=4.13
       - ncnn>=1.0.2

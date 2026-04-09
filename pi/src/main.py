@@ -1,23 +1,20 @@
 from __future__ import annotations
 
-"""Main orchestrator for camera loop and API server."""
+"""Main orchestrator for the camera loop and preview server."""
 
 import threading
 import time
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Callable
 import sys
 import cv2
-import uvicorn
 import numpy as np
 from loguru import logger
 
 from analyzer.queue_state import QueueStateTracker
 from analyzer.wait_time import WaitTimeEstimator
-from api.app import create_app
 from camera import make_camera
-from config import Settings, get_settings, preview_targets
+from config import Settings, get_settings
 from database import create_db_and_tables, get_session
 from db_models import PersonEvent, QueueSnapshot
 from detection.detector import PersonDetector
@@ -25,6 +22,7 @@ from detection.zone import QueueZone
 from analyzer.comfort import compute_comfort_score
 from display import make_display
 from display.base import SiteDisplay
+from preview_server import create_preview_http_server
 from schemas import QueueStatusResponse, SensorReading
 from sync.hub_sync import HubSyncAgent, PeerCache
 
@@ -39,19 +37,6 @@ class SharedState:
         self._status: QueueStatusResponse | None = None
         self._preview_jpeg: bytes | None = None
         self._sensors: SensorReading | None = None
-        self._broadcaster: Callable[[dict[str, object]], None] | None = None
-
-    def set_broadcaster(self, broadcaster: Callable[[dict[str, object]], None]) -> None:
-        """Set optional sync broadcaster callback."""
-
-        self._broadcaster = broadcaster
-
-    def broadcast(self, status: QueueStatusResponse) -> None:
-        """Broadcast current status to websocket clients when available."""
-
-        if self._broadcaster is None:
-            return
-        self._broadcaster(status.model_dump(mode="json"))
 
     def update(self, status: QueueStatusResponse) -> None:
         """Store latest queue status."""
@@ -129,10 +114,8 @@ def _persist_snapshot(snapshot: QueueSnapshot) -> None:
 
 
 def camera_loop(settings: Settings, state: SharedState, peer_cache: PeerCache) -> None:
-    """Run queue estimation processing loop in a daemon thread."""
+    """Run the queue estimation processing loop until exit."""
 
-    use_opencv, use_http = preview_targets(settings)
-    opencv_used = False
     detector = PersonDetector(settings)
     zone = QueueZone(settings.queue_zone)
     tracker = QueueStateTracker(settings)
@@ -305,18 +288,11 @@ def camera_loop(settings: Settings, state: SharedState, peer_cache: PeerCache) -
                     resized_frame = cv2.resize(
                         vis_frame, (DISPLAY_WIDTH, DISPLAY_HEIGHT)
                     )
-                    if use_http:
-                        ok, buf = cv2.imencode(
-                            ".jpg", resized_frame, [cv2.IMWRITE_JPEG_QUALITY, 85]
-                        )
-                        if ok:
-                            state.set_preview_jpeg(buf.tobytes())
-                    if use_opencv:
-                        opencv_used = True
-                        cv2.imshow("Queue Estimator - Press ESC to exit", resized_frame)
-                        if cv2.waitKey(1) & 0xFF == 27:  # ESC key
-                            logger.info("ESC pressed, shutting down...")
-                            break
+                    ok, buf = cv2.imencode(
+                        ".jpg", resized_frame, [cv2.IMWRITE_JPEG_QUALITY, 85]
+                    )
+                    if ok:
+                        state.set_preview_jpeg(buf.tobytes())
 
                     if (
                         time.monotonic() - last_snapshot_time
@@ -345,7 +321,6 @@ def camera_loop(settings: Settings, state: SharedState, peer_cache: PeerCache) -
                             }
                         )
                         state.update(status)
-                        state.broadcast(status)
                         logger.info(
                             (
                                 "Snapshot written | queue_length={} wait_seconds={:.2f} throughput={:.2f} "
@@ -390,10 +365,6 @@ def camera_loop(settings: Settings, state: SharedState, peer_cache: PeerCache) -
     except Exception:
         logger.exception("Camera source failure")
 
-    finally:
-        if opencv_used:
-            cv2.destroyAllWindows()
-
 
 def _configure_logging() -> None:
     """Configure Loguru outputs and file rotation."""
@@ -416,22 +387,14 @@ def _configure_logging() -> None:
 
 
 def main() -> None:
-    """Run queue estimator orchestrator and API server."""
+    """Run queue estimator orchestrator and preview server."""
 
     _configure_logging()
     settings = get_settings()
-    use_ocv, use_http = preview_targets(settings)
     logger.info(
-        "Preview QE_PREVIEW_MODE={} -> opencv_window={} http_stream={}",
-        settings.preview_mode,
-        use_ocv,
-        use_http,
+        "Open http://127.0.0.1:{}/preview for local video preview",
+        settings.api_port,
     )
-    if use_http:
-        logger.info(
-            "Open http://127.0.0.1:{}/api/v1/queue/preview for live video",
-            settings.api_port,
-        )
     create_db_and_tables()
 
     shared_state = SharedState()
@@ -447,17 +410,24 @@ def main() -> None:
     else:
         logger.info("QE_HUB_URL not set — hub sync disabled")
 
-    app = create_app(shared_state=shared_state, peer_cache=peer_cache)
-    shared_state.set_broadcaster(app.state.ws_hub.enqueue)
-
-    camera_thread = threading.Thread(
-        target=camera_loop,
-        args=(settings, shared_state, peer_cache),
-        daemon=True,
-        name="camera-loop-thread",
+    preview_http_server = create_preview_http_server(
+        settings.api_host,
+        settings.api_port,
+        shared_state,
     )
-    camera_thread.start()
-    uvicorn.run(app, host=settings.api_host, port=settings.api_port)
+    preview_http_thread = threading.Thread(
+        target=preview_http_server.serve_forever,
+        daemon=True,
+        name="preview-http-thread",
+    )
+    preview_http_thread.start()
+    logger.info(
+        "Preview server listening on http://{}:{}",
+        settings.api_host,
+        settings.api_port,
+    )
+
+    camera_loop(settings, shared_state, peer_cache)
 
 
 if __name__ == "__main__":

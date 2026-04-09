@@ -8,7 +8,8 @@ Backend system for estimating queue length and wait time from camera feeds on Ra
 - Configurable polygon queue zone filtering
 - Real-time queue state and rolling wait-time estimation
 - SQLite persistence via SQLModel
-- FastAPI HTTP + WebSocket API
+- Hub push/pull sync with the web project
+- Lightweight local HTTP preview stream
 - Sense HAT display output
 - Structured logging with Loguru
 
@@ -101,6 +102,10 @@ Raspberry Pi (PiCamera2 + Sense HAT + NCNN):
 QE_CAMERA_SOURCE=picamera queue-estimator
 ```
 
+The edge node is headless by default. It keeps processing frames, storing local
+history, and pushing snapshots to the web app when `QE_HUB_URL` is configured.
+It also exposes a minimal local preview stream on `QE_API_HOST:QE_API_PORT`.
+
 Sense HAT output requires Raspberry Pi packages:
 
 ```bash
@@ -119,12 +124,10 @@ rpicam-hello
 rpicam-still -o test.jpg && echo "Camera OK"
 ```
 
-## API Endpoints
+## Preview Endpoint
+
+The node always starts a minimal local preview server on `QE_API_HOST:QE_API_PORT`.
 
 | Method | Endpoint | Description |
 | --- | --- | --- |
-| GET | `/api/v1/queue/status` | In-memory current queue status |
-| GET | `/api/v1/queue/history` | Snapshot history over time window |
-| WS | `/api/v1/queue/live` | Live status stream for connected clients |
-| GET | `/api/v1/analytics/summary` | Aggregated analytics for configurable period |
-| GET | `/api/v1/analytics/peak-hours` | Top 3 busiest hours in last 7 days |
+| GET | `/preview` | MJPEG video preview stream |
