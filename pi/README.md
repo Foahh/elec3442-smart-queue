@@ -38,6 +38,8 @@ development machine, then copy that directory onto the Pi.
 Install PiCamera2 and Sense HAT into the same environment:
 
 ```bash
+rm -rf .venv
+uv venv --system-site-packages
 uv sync --extra pi
 ```
 
