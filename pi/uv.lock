@@ -606,7 +606,6 @@ dependencies = [
     { name = "numpy" },
     { name = "opencv-python-headless" },
     { name = "pydantic-settings" },
-    { name = "pytest" },
     { name = "pyxtrackers" },
     { name = "sqlmodel" },
 ]
@@ -615,6 +614,9 @@ dependencies = [
 pi = [
     { name = "picamera2" },
     { name = "sense-hat" },
+]
+test = [
+    { name = "pytest" },
 ]
 
 [package.metadata]
@@ -625,12 +627,12 @@ requires-dist = [
     { name = "opencv-python-headless", specifier = ">=4.13" },
     { name = "picamera2", marker = "extra == 'pi'" },
     { name = "pydantic-settings", specifier = ">=2.13.1" },
-    { name = "pytest", specifier = ">=8.0.0" },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.4.0" },
     { name = "pyxtrackers", specifier = ">=2026.3.3" },
     { name = "sense-hat", marker = "extra == 'pi'" },
     { name = "sqlmodel", specifier = ">=0.0.37" },
 ]
-provides-extras = ["pi"]
+provides-extras = ["test", "pi"]
 
 [[package]]
 name = "sqlalchemy"

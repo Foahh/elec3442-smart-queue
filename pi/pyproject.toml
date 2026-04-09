@@ -16,10 +16,12 @@ dependencies = [
     "opencv-python-headless>=4.13",
     "ncnn>=1.0.2",
     "pyxtrackers>=2026.3.3",
-    "pytest>=8.0.0",
 ]
 
 [project.optional-dependencies]
+test = [
+    "pytest>=8.4.0",
+]
 pi = [
     "picamera2",
     "sense-hat",
