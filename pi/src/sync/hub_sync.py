@@ -17,6 +17,10 @@ from config import Settings
 if TYPE_CHECKING:
     from main import SharedState
 
+_HUB_HEADERS_BASE = {
+    "User-Agent": "SmartQueue-HubSync/1.0",
+}
+
 
 @dataclass
 class SiteSnapshot:
@@ -153,6 +157,7 @@ class HubSyncAgent:
             url,
             data=data,
             headers={
+                **_HUB_HEADERS_BASE,
                 "Content-Type": "application/json",
                 "X-Api-Key": self._settings.hub_api_key,
             },
@@ -174,7 +179,7 @@ class HubSyncAgent:
 
     def _do_pull(self) -> None:
         url = self._settings.hub_url.rstrip("/") + "/api/sites"
-        req = urllib.request.Request(url, method="GET")
+        req = urllib.request.Request(url, headers=dict(_HUB_HEADERS_BASE), method="GET")
         try:
             with urllib.request.urlopen(req, timeout=4) as resp:
                 payload = json.loads(resp.read())
