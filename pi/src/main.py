@@ -172,6 +172,7 @@ def camera_loop(settings: Settings, state: SharedState, peer_cache: PeerCache) -
     last_level: str | None = None
 
     last_preview_encoded_at = 0.0
+    frame_is_rgb = settings.camera_source == "picamera"
 
     try:
         with make_camera(settings) as camera:
@@ -288,7 +289,11 @@ def camera_loop(settings: Settings, state: SharedState, peer_cache: PeerCache) -
                     )
                     if should_encode_preview:
                         # create visualization frame with bounding boxes and zone
-                        vis_frame = frame.copy()
+                        vis_frame = (
+                            cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+                            if frame_is_rgb
+                            else frame.copy()
+                        )
                         # ROI border (ROI == full cropped frame).
                         h_vis, w_vis = vis_frame.shape[:2]
                         cv2.rectangle(

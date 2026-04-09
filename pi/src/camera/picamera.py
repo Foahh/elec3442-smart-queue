@@ -33,14 +33,14 @@ class PiCameraSource(CameraSource):
         config = self._camera.create_preview_configuration(
             main={
                 "size": (self._settings.camera_width, self._settings.camera_height),
-                "format": "BGR888",
+                "format": "RGB888",
             }
         )
         self._camera.configure(config)
         self._camera.start()
 
     def read_frame(self) -> np.ndarray | None:
-        """Capture one frame and return BGR numpy image."""
+        """Capture one frame and return an RGB numpy image."""
 
         if self._camera is None:
             return None

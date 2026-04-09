@@ -94,6 +94,7 @@ class _NcnnYoloPersonDetector:
 
         self._ncnn = ncnn
         self._settings = settings
+        self._input_is_rgb = settings.camera_source == "picamera"
         self._tracker = BYTETracker(
             track_thresh=float(settings.yolo_confidence),
             match_thresh=0.8,
@@ -117,7 +118,7 @@ class _NcnnYoloPersonDetector:
         h0, w0 = img.shape[:2]
         imgsz = int(self._settings.yolo_imgsz)
 
-        rgb = img[:, :, ::-1]  # BGR -> RGB
+        rgb = img if self._input_is_rgb else img[:, :, ::-1]  # BGR -> RGB
         resized = _resize_letterbox(rgb, imgsz, imgsz)
         inp = resized.astype(np.float32) / 255.0
 
