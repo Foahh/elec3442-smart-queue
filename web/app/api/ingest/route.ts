@@ -6,8 +6,6 @@ import {
 } from "@/lib/server/site-records"
 import type { IngestPayload } from "@/lib/types"
 
-export const runtime = "edge"
-
 export async function POST(request: Request) {
   const apiKey = request.headers.get("x-api-key") ?? ""
   const env = await getCloudflareEnv()

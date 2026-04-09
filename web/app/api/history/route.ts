@@ -3,8 +3,6 @@ import { listSnapshotsForSite } from "@/lib/db/repositories"
 import { parseHistoryQuery } from "@/lib/server/history-query"
 import { mapSnapshotRow } from "@/lib/server/site-records"
 
-export const runtime = "edge"
-
 export async function GET(request: Request) {
   const { siteId, minutes, limit } = parseHistoryQuery(request)
 

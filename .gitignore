@@ -6,4 +6,3 @@ condaenv.*.requirements.txt
 docs/superpowers/
 .worktrees/
 datasets/
-.env
