@@ -72,7 +72,7 @@ def require_env(name: str) -> str:
         f"error: {name} must be set for authenticated Hugging Face requests\n"
         f"  Linux/macOS (bash): export {name}=...\n"
         f"  Windows (cmd.exe):  set {name}=...\n"
-        f"  Windows (PowerShell): $env:{name}=\"...\"\n"
+        f'  Windows (PowerShell): $env:{name}="..."\n'
         "  https://huggingface.co/settings/tokens"
     )
 

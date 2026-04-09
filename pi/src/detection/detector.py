@@ -56,7 +56,7 @@ def _nms_xyxy(
         return []
 
     b = []
-    for (x1, y1, x2, y2) in boxes:
+    for x1, y1, x2, y2 in boxes:
         w = max(0.0, x2 - x1)
         h = max(0.0, y2 - y1)
         b.append([float(x1), float(y1), float(w), float(h)])

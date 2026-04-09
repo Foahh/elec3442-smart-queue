@@ -24,7 +24,7 @@ from display import make_display
 from display.base import SiteDisplay
 from preview_server import create_preview_http_server
 from schemas import QueueStatusResponse, SensorReading
-from sync.hub_sync import HubSyncAgent, PeerCache
+from hub_sync import HubSyncAgent, PeerCache
 
 
 class SharedState:
@@ -189,7 +189,9 @@ def camera_loop(settings: Settings, state: SharedState, peer_cache: PeerCache) -
                     frame = _center_square_crop(frame)
 
                     inference_started_at = time.monotonic()
-                    persons = detector.detect(frame, input_color_space=camera.color_space)
+                    persons = detector.detect(
+                        frame, input_color_space=camera.color_space
+                    )
                     inference_ms = (time.monotonic() - inference_started_at) * 1000.0
 
                     # Sensor read (Sense HAT only; NullDisplay has no read_sensors)
@@ -317,9 +319,7 @@ def camera_loop(settings: Settings, state: SharedState, peer_cache: PeerCache) -
 
                         # draw boxes for all persons
                         for person in persons:
-                            x1, y1, x2, y2 = [
-                                int(coord) for coord in person.bbox_xyxy
-                            ]
+                            x1, y1, x2, y2 = [int(coord) for coord in person.bbox_xyxy]
                             color = (
                                 (0, 255, 0)
                                 if person in in_zone_persons
