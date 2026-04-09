@@ -9,9 +9,8 @@ from typing import Literal
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
 PI_ROOT = Path(__file__).resolve().parents[1]
-ENV_FILE = PROJECT_ROOT / ".env"
+ENV_FILE = PI_ROOT / ".env"
 
 
 class Settings(BaseSettings):
@@ -19,7 +18,7 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="QE_")
 
-    yolo_model_path: Path = PI_ROOT / "models" / "yolo26n_ncnn_model"
+    yolo_model_path: Path | None = None
     yolo_confidence: float = 0.4
     yolo_iou: float = 0.5
     yolo_imgsz: int = 640

@@ -17,6 +17,8 @@ dependencies = [
     "torch>=2.0",
     "torchvision>=0.15",
     "ultralytics>=8.4.36",
+    "lap>=0.5.12",
+    "ncnn"
 ]
 
 [project.optional-dependencies]

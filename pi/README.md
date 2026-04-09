@@ -61,7 +61,7 @@ On the Pi, only **inference** packages from `uv sync` are required; the exported
 
 ## Environment Configuration
 
-Create `.env` in project root:
+Create `.env` in the `pi` directory (same folder as `pyproject.toml`):
 
 ```env
 QE_YOLO_MODEL_PATH=models/yolo26n_ncnn_model
