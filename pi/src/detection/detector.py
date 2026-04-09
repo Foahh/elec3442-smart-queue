@@ -13,8 +13,7 @@ from ultralytics import YOLO
 from ultralytics.engine.results import Boxes
 from ultralytics.trackers.byte_tracker import BYTETracker
 
-from config import Settings
-from detection.model_path import resolve_model_path
+from config import PI_ROOT, Settings
 
 
 @dataclass(slots=True)
@@ -72,12 +71,12 @@ def _boxes_to_persons(boxes: np.ndarray, w0: int, h0: int) -> list[DetectedPerso
     return persons
 
 
-class _UltralyticsNcnnPersonDetector:
-    """Ultralytics YOLO (NCNN export) + Ultralytics ByteTrack."""
+class _UltralyticsPersonDetector:
+    """Ultralytics `YOLO` backend + ByteTrack."""
 
-    def __init__(self, settings: Settings, model_dir: Path) -> None:
+    def __init__(self, settings: Settings, model_path: Path) -> None:
         self._settings = settings
-        self._model = YOLO(str(model_dir))
+        self._model = YOLO(str(model_path))
         self._tracker = BYTETracker(
             _tracker_args(settings), frame_rate=max(int(settings.camera_fps), 1)
         )
@@ -113,24 +112,23 @@ class PersonDetector:
     """Detector wrapper for YOLO tracking."""
 
     def __init__(self, settings: Settings) -> None:
-        """Load NCNN export (Ultralytics) and prepare detector + tracker."""
+        """Load an Ultralytics-compatible model path and prepare detector + tracker."""
 
         self._settings = settings
-        settings.model_dir.mkdir(parents=True, exist_ok=True)
-        model_path = resolve_model_path(settings)
+        raw = Path(settings.yolo_model_path).expanduser()
+        model_path = (raw if raw.is_absolute() else PI_ROOT / raw).resolve()
+        model_path.parent.mkdir(parents=True, exist_ok=True)
         try:
             if model_path.exists():
-                logger.info(
-                    "Loading Ultralytics YOLO (NCNN) from {}", model_path
-                )
-                self._model = _UltralyticsNcnnPersonDetector(
-                    settings=settings, model_dir=model_path
+                logger.info("Loading YOLO from {}", model_path)
+                self._model = _UltralyticsPersonDetector(
+                    settings=settings, model_path=model_path
                 )
             else:
                 raise FileNotFoundError(
-                    f"NCNN model directory not found: {model_path}. "
-                    "Export with Ultralytics (yolo export format=ncnn), then copy "
-                    "the `<stem>_ncnn_model/` folder into `pi/models/`."
+                    f"Model path not found: {model_path}. "
+                    "Set `QE_YOLO_MODEL_PATH` to a checkpoint or exported model "
+                    "Ultralytics can load."
                 )
         except (RuntimeError, ValueError, OSError, FileNotFoundError) as exc:
             logger.exception("Failed to load model from {}", model_path)

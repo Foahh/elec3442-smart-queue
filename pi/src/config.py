@@ -19,12 +19,10 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="QE_")
 
-    # Model
-    yolo_model: str = "yolo26n.pt"
+    yolo_model_path: Path = PI_ROOT / "models" / "yolo26n_ncnn_model"
     yolo_confidence: float = 0.4
     yolo_iou: float = 0.5
     yolo_imgsz: int = 640
-    model_dir: Path = PI_ROOT / "models"
 
     # Camera
     camera_source: Literal["picamera", "video"] = "picamera"

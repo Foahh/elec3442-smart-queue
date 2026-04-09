@@ -1073,7 +1073,7 @@ requires-dist = [
     { name = "pydantic-settings", specifier = ">=2.13.1" },
     { name = "sense-hat", marker = "extra == 'pi'" },
     { name = "sqlmodel", specifier = ">=0.0.37" },
-    { name = "ultralytics", specifier = ">=8.4.0" },
+    { name = "ultralytics", specifier = ">=8.4.36" },
 ]
 provides-extras = ["pi"]
 

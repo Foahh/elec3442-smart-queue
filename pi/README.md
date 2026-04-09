@@ -47,7 +47,7 @@ Then run commands with `uv run` (see **Running**).
 
 ## Prepare Model (Required Before Running)
 
-`QE_YOLO_MODEL` is the **weights stem** (e.g. `yolo26n.pt`). At runtime the app resolves **`models/<stem>_ncnn_model/`** relative to this `pi/` directory.
+`QE_YOLO_MODEL_PATH` is the **NCNN export directory** (e.g. `models/yolo26n_ncnn_model` under this `pi/` tree, or an absolute path on the device).
 
 Export on a machine with Ultralytics (install export helpers if needed, e.g. `pip install 'ultralytics[export]'` or use the repo root README), for example:
 
@@ -64,7 +64,7 @@ On the Pi, only **inference** packages from `uv sync` are required; the exported
 Create `.env` in project root:
 
 ```env
-QE_YOLO_MODEL=yolo26n.pt
+QE_YOLO_MODEL_PATH=models/yolo26n_ncnn_model
 QE_YOLO_CONFIDENCE=0.4
 QE_YOLO_IOU=0.5
 QE_YOLO_IMGSZ=640
@@ -98,7 +98,7 @@ QE_DATABASE_URL=sqlite:///data/queue.db
 For Raspberry Pi deployment:
 
 ```env
-QE_YOLO_MODEL=yolo26n.pt
+QE_YOLO_MODEL_PATH=models/yolo26n_ncnn_model
 QE_CAMERA_SOURCE=picamera
 QE_CAMERA_WIDTH=1280
 QE_CAMERA_HEIGHT=720
