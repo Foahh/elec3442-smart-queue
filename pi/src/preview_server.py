@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 if TYPE_CHECKING:
-    from main import SharedState
+    from runtime.shared_state import SharedState
 
 
 class PreviewHTTPServer(ThreadingHTTPServer):

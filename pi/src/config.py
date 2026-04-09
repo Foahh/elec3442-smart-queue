@@ -78,6 +78,9 @@ class Settings(BaseSettings):
     # Database
     database_url: str = "sqlite:///data/queue.db"
 
+    # Logging
+    log_level: str = "INFO"
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:

@@ -17,7 +17,7 @@ from database import get_session
 from db_models import PeerSiteSnapshot
 
 if TYPE_CHECKING:
-    from main import SharedState
+    from runtime.shared_state import SharedState
 
 _HUB_HEADERS_BASE = {
     "User-Agent": "SmartQueue-HubSync/1.0",

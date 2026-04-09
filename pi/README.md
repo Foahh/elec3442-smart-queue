@@ -75,7 +75,10 @@ QE_CAMERA_WIDTH=1280
 QE_CAMERA_HEIGHT=720
 QE_CAMERA_FPS=10
 QE_DATABASE_URL=sqlite:///data/queue.db
+QE_LOG_LEVEL=DEBUG
 ```
+
+`QE_LOG_LEVEL` controls Loguru verbosity for stderr output. Common values are `TRACE`, `DEBUG`, `INFO`, `WARNING`, and `ERROR`.
 
 ### Preview stream
 
