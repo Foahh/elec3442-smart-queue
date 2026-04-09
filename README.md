@@ -4,7 +4,7 @@ Queue length and wait-time estimation from camera feeds. The runnable applicatio
 
 ## Download and export YOLO → NCNN
 
-The estimator loads an **NCNN** export for inference. Ultralytics’ export stack pulls in **`ultralytics[export]`**, which pins **NumPy below 2.x**, while **smart-queue-estimator** uses **NumPy 2** (needed by current OpenCV wheels). Use a **separate conda environment** only for exporting; do not install export extras into `elec3442`.
+The estimator loads an **NCNN** export for inference. Ultralytics’ export stack pulls in **`ultralytics[export]`**, which pins **NumPy below 2.x**, while **smart-queue** uses **NumPy 2** (needed by current OpenCV wheels). Use a **separate conda environment** only for exporting; do not install export extras into the Pi **uv** project environment (see [pi/README.md](pi/README.md)).
 
 ### 1. Create an export-only environment
 
@@ -32,7 +32,7 @@ Copy the generated folder into the estimator’s `models/` directory, for exampl
 
 ### 3. Optional checks (estimator / NumPy 2 stack)
 
-After copying the NCNN folder, from **pi** with `conda activate elec3442`:
+After copying the NCNN folder, from **pi** with the estimator environment set up per [pi/README.md](pi/README.md):
 
 ```bash
 cd pi

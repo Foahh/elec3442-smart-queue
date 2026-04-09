@@ -15,8 +15,8 @@ Backend system for estimating queue length and wait time from camera feeds on Ra
 
 ## Requirements
 
-- Python 3.14 (see `environment.yml`)
-- [Conda](https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html)
+- Python 3.14
+- [uv](https://docs.astral.sh/uv/getting-started/installation/)
 
 ## Setup
 
@@ -24,11 +24,10 @@ Backend system for estimating queue length and wait time from camera feeds on Ra
 git clone https://github.com/Foahh/elec3442-smart-queue
 cd elec3442-smart-queue/pi
 
-conda env create -f environment.yml
-conda activate elec3442
+uv sync
 ```
 
-The last pip line in `environment.yml` (`-e .`) installs this repo and registers the `queue-estimator` command. If you see `command not found`, run `pip install -e .` from this directory (or `conda env update -f environment.yml --prune` after pulling changes).
+This creates `.venv`, installs dependencies from `pyproject.toml`, and registers the `smart-queue` console script. Use `uv run smart-queue` or activate `.venv` and run `smart-queue` directly. After pulling dependency changes, run `uv sync` again.
 
 ### Raspberry Pi runtime (inference-only, NCNN)
 
@@ -36,14 +35,13 @@ This project is designed so the Raspberry Pi runs **inference only** using the
 exported NCNN model directory (`models/yolo26n_ncnn_model/`). Do YOLO export on a
 development machine, then copy that directory onto the Pi.
 
-Install Pi runtime dependencies (PiCamera2 + Sense HAT) into the active environment:
+Install PiCamera2 and Sense HAT into the same environment:
 
 ```bash
-conda activate elec3442
-pip install -r requirements.txt
+uv sync --extra pi
 ```
 
-After `conda activate elec3442`, run commands in that environment (see **Running**).
+Then run commands with `uv run` (see **Running**).
 
 ## Prepare Model (Required Before Running)
 
@@ -86,31 +84,52 @@ QE_CAMERA_FPS=10
 QE_DATABASE_URL=sqlite:///data/queue.db
 ```
 
+### Hub sync (web dashboard)
+
+When `QE_HUB_URL` is non-empty, a background thread **pushes** local queue status to the web app and **pulls** peer sites for cross-site views.
+
+| Variable | Description |
+| --- | --- |
+| `QE_HUB_URL` | Base URL of the deployed web project (e.g. `https://your-app.example.com`). Trailing slashes are fine. |
+| `QE_HUB_API_KEY` | Shared secret; must match the web env **`API_KEY`** (sent as `X-Api-Key` on ingest). |
+| `QE_SITE_ID` | Stable id for this edge node (stored and shown in the hub). |
+| `QE_SITE_DISPLAY_NAME` | Human-readable site label. |
+| `QE_SITE_LATITUDE` | Optional; included in ingest if set. |
+| `QE_SITE_LONGITUDE` | Optional; included in ingest if set. |
+| `QE_HUB_PUSH_INTERVAL` | Seconds between successful pushes (default `5`). Backoff increases on errors. |
+| `QE_HUB_PULL_INTERVAL` | Seconds between successful pulls of `/api/sites` (default `5`). |
+
+Endpoints (relative to `QE_HUB_URL`): **POST** `/api/ingest` (JSON body + `X-Api-Key`), **GET** `/api/sites` (public listing for the dashboard). If `QE_HUB_URL` is unset or empty, hub sync stays off.
+
+Example fragment:
+
+```env
+QE_HUB_URL=https://queue-dashboard.example.com
+QE_HUB_API_KEY=your-shared-secret
+QE_SITE_ID=pi-lab-01
+QE_SITE_DISPLAY_NAME=Lab queue camera
+```
+
 ## Running
 
 Development machine (webcam):
 
 ```bash
-conda activate elec3442
-queue-estimator
+uv run smart-queue
 ```
 
 Raspberry Pi (PiCamera2 + Sense HAT + NCNN):
 
 ```bash
 # If NCNN dir is missing, export per ../README.md then copy models/.
-QE_CAMERA_SOURCE=picamera queue-estimator
+QE_CAMERA_SOURCE=picamera uv run smart-queue
 ```
 
 The edge node is headless by default. It keeps processing frames, storing local
 history, and pushing snapshots to the web app when `QE_HUB_URL` is configured.
 It also exposes a minimal local preview stream on `QE_API_HOST:QE_API_PORT`.
 
-Sense HAT output requires Raspberry Pi packages:
-
-```bash
-pip install -r requirements.txt
-```
+Sense HAT output requires Raspberry Pi packages (`uv sync --extra pi`).
 
 ### Camera Test (Pi)
 
