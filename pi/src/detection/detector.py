@@ -96,6 +96,7 @@ class _UltralyticsPersonDetector:
             iou=float(self._settings.yolo_iou),
             classes=[0],
             verbose=False,
+            device="vulkan:0"
         )[0]
 
         det_boxes = pred.boxes
