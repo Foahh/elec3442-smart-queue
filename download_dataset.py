@@ -45,7 +45,7 @@ SPLIT_CANDIDATES: dict[str, tuple[str, ...]] = {
 
 ANNOTATION_LIST_KEYS = ("gtboxes", "annotations", "objects", "labels", "instances", "label")
 NESTED_ANNOTATION_KEYS = ("gtboxes", "annotations", "objects", "labels", "instances")
-BOX_KEYS = ("fbox", "bbox", "box", "vbox")
+BOX_KEYS = ("vbox", "fbox", "bbox", "box")
 STEM_KEYS = ("ID", "id", "image_id", "filename")
 
 
