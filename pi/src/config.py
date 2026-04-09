@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     yolo_confidence: float = 0.4
     yolo_iou: float = 0.5
     yolo_imgsz: int = 640
+    yolo_device: str = "cpu"
 
     # Camera
     camera_source: Literal["picamera", "video"] = "picamera"

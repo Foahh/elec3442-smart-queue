@@ -76,7 +76,7 @@ class _UltralyticsPersonDetector:
 
     def __init__(self, settings: Settings, model_path: Path) -> None:
         self._settings = settings
-        self._model = YOLO(str(model_path))
+        self._model = YOLO(str(model_path), task="detect")
         self._tracker = BYTETracker(
             _tracker_args(settings), frame_rate=max(int(settings.camera_fps), 1)
         )
@@ -96,7 +96,7 @@ class _UltralyticsPersonDetector:
             iou=float(self._settings.yolo_iou),
             classes=[0],
             verbose=False,
-            device="vulkan:0"
+            device=self._settings.yolo_device,
         )[0]
 
         det_boxes = pred.boxes
