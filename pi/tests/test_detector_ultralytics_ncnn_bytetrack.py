@@ -1,64 +1,65 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import pytest
+import torch
+from ultralytics.engine.results import Boxes
 
 from config import Settings
 from detection.detector import PersonDetector
 
 
-@dataclass
-class _FakeBoxes:
-    """Mimic ultralytics Results.boxes API surface we need."""
-
-    xyxy: np.ndarray  # shape (N, 4)
-    conf: np.ndarray  # shape (N,)
-    cls: np.ndarray  # shape (N,)
-
-
-class _FakeResult:
-    def __init__(self, boxes: _FakeBoxes) -> None:
-        self.boxes = boxes
-
-
 class _FakeYOLO:
+    """Returns one person box as a real ultralytics Boxes tensor."""
+
     def __init__(self, model_path: str | Path) -> None:
         self.model_path = str(model_path)
+        self.last_rgb_frame: np.ndarray | None = None
 
-    def __call__(self, rgb_frame: np.ndarray, **kwargs: Any) -> list[_FakeResult]:
-        boxes = _FakeBoxes(
-            xyxy=np.array([[10.0, 20.0, 110.0, 220.0]], dtype=np.float32),
-            conf=np.array([0.9], dtype=np.float32),
-            cls=np.array([0.0], dtype=np.float32),  # person class
-        )
-        return [_FakeResult(boxes)]
+    def predict(self, source: Any, **kwargs: Any) -> list[Any]:
+        assert isinstance(source, np.ndarray)
+        self.last_rgb_frame = source
+        data = torch.tensor([[10.0, 20.0, 110.0, 220.0, 0.9, 0.0]])
+        boxes = Boxes(data, orig_shape=(source.shape[0], source.shape[1]))
 
+        class _R:
+            def __init__(self) -> None:
+                self.boxes = boxes
 
-class _FakeSTrack:
-    def __init__(self, track_id: int, xyxy: np.ndarray, score: float) -> None:
-        self.track_id = track_id
-        self.xyxy = xyxy
-        self.score = score
+        return [_R()]
 
 
 class _FakeBYTETracker:
+    """Mimics ultralytics BYTETracker.update(results, img=...) -> ndarray."""
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         self._next_id = 1
 
     def update(
-        self, dets: np.ndarray, img_size: tuple[int, int], **kwargs: Any
-    ) -> list[_FakeSTrack]:
-        if dets.size == 0:
-            return []
-        xyxy = dets[0, :4].astype(np.float32)
-        score = float(dets[0, 4])
+        self,
+        results: Boxes,
+        img: np.ndarray | None = None,
+        feats: np.ndarray | None = None,
+    ) -> np.ndarray:
+        if len(results) == 0:
+            return np.empty((0, 8), dtype=np.float32)
+        xyxy = results.xyxy[0]
+        x1, y1, x2, y2 = (float(xyxy[i]) for i in range(4))
         tid = self._next_id
         self._next_id += 1
-        return [_FakeSTrack(tid, xyxy, score)]
+        conf = float(results.conf[0])
+        cls_ = float(results.cls[0])
+        idx = 0.0
+        return np.array(
+            [[x1, y1, x2, y2, tid, conf, cls_, idx]], dtype=np.float32
+        )
+
+
+def _make_model_dir(tmp_path: Path) -> None:
+    (tmp_path / "yolo26n_ncnn_model").mkdir(parents=True)
 
 
 def test_person_detector_converts_bgr_to_rgb(
@@ -69,6 +70,7 @@ def test_person_detector_converts_bgr_to_rgb(
     monkeypatch.setattr(detmod, "YOLO", _FakeYOLO, raising=True)
     monkeypatch.setattr(detmod, "BYTETracker", _FakeBYTETracker, raising=True)
 
+    _make_model_dir(tmp_path)
     settings = Settings(model_dir=tmp_path, yolo_model="yolo26n.pt")
     detector = PersonDetector(settings)
 
@@ -76,6 +78,11 @@ def test_person_detector_converts_bgr_to_rgb(
     frame_bgr[0, 0] = np.array([255, 0, 0], dtype=np.uint8)  # blue in BGR
 
     persons = detector.detect(frame_bgr, input_color_space="bgr")
+
+    fake_yolo = detector._model._model  # type: ignore[attr-defined]
+    assert fake_yolo.last_rgb_frame is not None
+    # BGR blue [255,0,0] → RGB [0,0,255]
+    assert tuple(int(x) for x in fake_yolo.last_rgb_frame[0, 0]) == (0, 0, 255)
 
     assert len(persons) == 1
     assert persons[0].track_id == 1
@@ -93,6 +100,7 @@ def test_person_detector_returns_empty_on_invalid_frame(
     monkeypatch.setattr(detmod, "YOLO", _FakeYOLO, raising=True)
     monkeypatch.setattr(detmod, "BYTETracker", _FakeBYTETracker, raising=True)
 
+    _make_model_dir(tmp_path)
     settings = Settings(model_dir=tmp_path, yolo_model="yolo26n.pt")
     detector = PersonDetector(settings)
 

@@ -4,7 +4,7 @@ Backend system for estimating queue length and wait time from camera feeds on Ra
 
 ## Features
 
-- YOLO26 (w/ NCNN model format) + ByteTrack person detection/tracking
+- YOLO26 via **Ultralytics** (NCNN export at runtime) + **Ultralytics ByteTrack**
 - Configurable polygon queue zone filtering
 - Real-time queue state and rolling wait-time estimation
 - SQLite persistence via SQLModel
@@ -29,6 +29,13 @@ uv sync
 
 This creates `.venv`, installs dependencies from `pyproject.toml`, and registers the `smart-queue` console script. Use `uv run smart-queue` or activate `.venv` and run `smart-queue` directly. After pulling dependency changes, run `uv sync` again.
 
+Unit tests (optional):
+
+```bash
+uv sync --extra test
+uv run pytest -q
+```
+
 ### Raspberry Pi runtime (inference-only, NCNN)
 
 This project is designed so the Raspberry Pi runs **inference only** using the
@@ -47,7 +54,17 @@ Then run commands with `uv run` (see **Running**).
 
 ## Prepare Model (Required Before Running)
 
-Follow **[Download and export YOLO → NCNN](../README.md#download-and-export-yolo--ncnn)** in the repository root README, then copy the generated `yolo26n_ncnn_model` folder into **`../models/`** at the repository root. The estimator runtime always loads that NCNN directory.
+`QE_YOLO_MODEL` is the **weights stem** (e.g. `yolo26n.pt`). At runtime the app resolves **`../models/<stem>_ncnn_model/`** (same folder layout as before).
+
+Export on a machine with Ultralytics (install export helpers if needed, e.g. `pip install 'ultralytics[export]'` or use the repo root README), for example:
+
+```bash
+uv run python -c "from ultralytics import YOLO; YOLO('yolo26n.pt').export(format='ncnn')"
+```
+
+Then copy the generated `yolo26n_ncnn_model` directory into **`../models/`** at the repository root. See also **[Download and export YOLO → NCNN](../README.md#download-and-export-yolo--ncnn)**.
+
+On the Pi, only **inference** packages from `uv sync` are required; the exported NCNN folder must already be present under `models/`.
 
 ## Environment Configuration
 
