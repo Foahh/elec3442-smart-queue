@@ -7,7 +7,7 @@ name = "smart-queue"
 version = "0.1.0"
 description = "Smart queue length and wait time estimator backend for Raspberry Pi"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.13"
 dependencies = [
     "loguru>=0.7.3",
     "numpy>=2.4.3",

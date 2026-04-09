@@ -58,8 +58,8 @@ class Settings(BaseSettings):
     site_display_name: str = ""
     site_latitude: float | None = None
     site_longitude: float | None = None
-    hub_push_interval: float = 5.0
-    hub_pull_interval: float = 5.0
+    hub_push_interval: float = 2.5
+    hub_pull_interval: float = 2.5
 
     # Sense HAT calibration
     temp_offset: float = -8.0

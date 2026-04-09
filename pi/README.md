@@ -15,7 +15,7 @@ Backend system for estimating queue length and wait time from camera feeds on Ra
 
 ## Requirements
 
-- Python 3.14
+- Python 3.13
 - [uv](https://docs.astral.sh/uv/getting-started/installation/)
 
 ## Setup
@@ -96,8 +96,8 @@ When `QE_HUB_URL` is non-empty, a background thread **pushes** local queue statu
 | `QE_SITE_DISPLAY_NAME` | Human-readable site label. |
 | `QE_SITE_LATITUDE` | Optional; included in ingest if set. |
 | `QE_SITE_LONGITUDE` | Optional; included in ingest if set. |
-| `QE_HUB_PUSH_INTERVAL` | Seconds between successful pushes (default `5`). Backoff increases on errors. |
-| `QE_HUB_PULL_INTERVAL` | Seconds between successful pulls of `/api/sites` (default `5`). |
+| `QE_HUB_PUSH_INTERVAL` | Seconds between successful pushes (default `2.5`). Backoff increases on errors. |
+| `QE_HUB_PULL_INTERVAL` | Seconds between successful pulls of `/api/sites` (default `2.5`). |
 
 Endpoints (relative to `QE_HUB_URL`): **POST** `/api/ingest` (JSON body + `X-Api-Key`), **GET** `/api/sites` (public listing for the dashboard). If `QE_HUB_URL` is unset or empty, hub sync stays off.
 
