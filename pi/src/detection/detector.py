@@ -130,7 +130,7 @@ class PersonDetector:
                 raise FileNotFoundError(
                     f"NCNN model directory not found: {model_path}. "
                     "Export with Ultralytics (yolo export format=ncnn), then copy "
-                    "the `<stem>_ncnn_model/` folder into `models/`."
+                    "the `<stem>_ncnn_model/` folder into `pi/models/`."
                 )
         except (RuntimeError, ValueError, OSError, FileNotFoundError) as exc:
             logger.exception("Failed to load model from {}", model_path)

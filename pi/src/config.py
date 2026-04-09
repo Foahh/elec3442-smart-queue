@@ -10,6 +10,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+PI_ROOT = Path(__file__).resolve().parents[1]
 ENV_FILE = PROJECT_ROOT / ".env"
 
 
@@ -23,7 +24,7 @@ class Settings(BaseSettings):
     yolo_confidence: float = 0.4
     yolo_iou: float = 0.5
     yolo_imgsz: int = 640
-    model_dir: Path = PROJECT_ROOT / "models"
+    model_dir: Path = PI_ROOT / "models"
 
     # Camera
     camera_source: Literal["picamera", "video"] = "picamera"
