@@ -172,7 +172,6 @@ def camera_loop(settings: Settings, state: SharedState, peer_cache: PeerCache) -
     last_level: str | None = None
 
     last_preview_encoded_at = 0.0
-    frame_is_rgb = settings.camera_source == "picamera"
 
     try:
         with make_camera(settings) as camera:
@@ -190,7 +189,7 @@ def camera_loop(settings: Settings, state: SharedState, peer_cache: PeerCache) -
                     frame = _center_square_crop(frame)
 
                     inference_started_at = time.monotonic()
-                    persons = detector.detect(frame)
+                    persons = detector.detect(frame, input_color_space=camera.color_space)
                     inference_ms = (time.monotonic() - inference_started_at) * 1000.0
 
                     # Sensor read (Sense HAT only; NullDisplay has no read_sensors)
@@ -291,7 +290,7 @@ def camera_loop(settings: Settings, state: SharedState, peer_cache: PeerCache) -
                         # create visualization frame with bounding boxes and zone
                         vis_frame = (
                             cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-                            if frame_is_rgb
+                            if camera.color_space == "rgb"
                             else frame.copy()
                         )
                         # ROI border (ROI == full cropped frame).

@@ -19,6 +19,10 @@ class PiCameraSource(CameraSource):
         self._settings = settings
         self._camera: Any | None = None
 
+    @property
+    def color_space(self):  # type: ignore[override]
+        return "rgb"
+
     def start(self) -> None:
         """Create and start picamera2 capture stream."""
 

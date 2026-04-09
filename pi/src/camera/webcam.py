@@ -19,6 +19,10 @@ class WebcamSource(CameraSource):
         self._settings = settings
         self._capture: cv2.VideoCapture | None = None
 
+    @property
+    def color_space(self):  # type: ignore[override]
+        return "bgr"
+
     def start(self) -> None:
         """Open camera device and apply resolution."""
 

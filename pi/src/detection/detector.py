@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
 
 import numpy as np
 from loguru import logger
@@ -94,7 +95,6 @@ class _NcnnYoloPersonDetector:
 
         self._ncnn = ncnn
         self._settings = settings
-        self._input_is_rgb = settings.camera_source == "picamera"
         self._tracker = BYTETracker(
             track_thresh=float(settings.yolo_confidence),
             match_thresh=0.8,
@@ -110,7 +110,9 @@ class _NcnnYoloPersonDetector:
         self._net.load_param(str(param))
         self._net.load_model(str(bin_))
 
-    def detect(self, frame: np.ndarray) -> list[DetectedPerson]:
+    def detect(
+        self, frame: np.ndarray, *, input_color_space: Literal["rgb", "bgr"]
+    ) -> list[DetectedPerson]:
         # Model expects RGB.
         img = frame
         if img.ndim != 3 or img.shape[2] != 3:
@@ -118,7 +120,7 @@ class _NcnnYoloPersonDetector:
         h0, w0 = img.shape[:2]
         imgsz = int(self._settings.yolo_imgsz)
 
-        rgb = img if self._input_is_rgb else img[:, :, ::-1]  # BGR -> RGB
+        rgb = img if input_color_space == "rgb" else img[:, :, ::-1]  # BGR -> RGB
         resized = _resize_letterbox(rgb, imgsz, imgsz)
         inp = resized.astype(np.float32) / 255.0
 
@@ -277,7 +279,9 @@ class PersonDetector:
             logger.exception("Failed to load model from {}", model_path)
             raise RuntimeError(f"Failed to load model: {model_path}") from exc
 
-    def detect(self, frame: np.ndarray) -> list[DetectedPerson]:
+    def detect(
+        self, frame: np.ndarray, *, input_color_space: Literal["rgb", "bgr"]
+    ) -> list[DetectedPerson]:
         """Run detection + lightweight tracking and return tracked persons."""
 
-        return self._model.detect(frame)
+        return self._model.detect(frame, input_color_space=input_color_space)
