@@ -29,17 +29,10 @@ uv sync
 
 This creates `.venv`, installs dependencies from `pyproject.toml`, and registers the `smart-queue` console script. Use `uv run smart-queue` or activate `.venv` and run `smart-queue` directly. After pulling dependency changes, run `uv sync` again.
 
-Unit tests (optional):
-
-```bash
-uv sync --extra test
-uv run pytest -q
-```
-
 ### Raspberry Pi runtime (inference-only, NCNN)
 
 This project is designed so the Raspberry Pi runs **inference only** using the
-exported NCNN model directory at **`../models/yolo26n_ncnn_model/`** (repository root, sibling of `pi/`). Do YOLO export on a
+exported NCNN model directory at **`models/yolo26n_ncnn_model/`** (under this `pi/` tree). Do YOLO export on a
 development machine, then copy that directory onto the Pi.
 
 Install PiCamera2 and Sense HAT into the same environment:
@@ -54,7 +47,7 @@ Then run commands with `uv run` (see **Running**).
 
 ## Prepare Model (Required Before Running)
 
-`QE_YOLO_MODEL` is the **weights stem** (e.g. `yolo26n.pt`). At runtime the app resolves **`../models/<stem>_ncnn_model/`** (same folder layout as before).
+`QE_YOLO_MODEL` is the **weights stem** (e.g. `yolo26n.pt`). At runtime the app resolves **`models/<stem>_ncnn_model/`** relative to this `pi/` directory.
 
 Export on a machine with Ultralytics (install export helpers if needed, e.g. `pip install 'ultralytics[export]'` or use the repo root README), for example:
 
@@ -62,9 +55,9 @@ Export on a machine with Ultralytics (install export helpers if needed, e.g. `pi
 uv run python -c "from ultralytics import YOLO; YOLO('yolo26n.pt').export(format='ncnn')"
 ```
 
-Then copy the generated `yolo26n_ncnn_model` directory into **`../models/`** at the repository root. See also **[Download and export YOLO → NCNN](../README.md#download-and-export-yolo--ncnn)**.
+Then copy the generated `yolo26n_ncnn_model` directory into **`models/`** here under `pi/`. See also **[Download and export YOLO → NCNN](../README.md#download-and-export-yolo--ncnn)**.
 
-On the Pi, only **inference** packages from `uv sync` are required; the exported NCNN folder must already be present under `models/`.
+On the Pi, only **inference** packages from `uv sync` are required; the exported NCNN folder must already be present under `pi/models/`.
 
 ## Environment Configuration
 
@@ -98,7 +91,7 @@ Use local video file as input (development/testing):
 
 ```env
 QE_CAMERA_SOURCE=video
-QE_CAMERA_VIDEO_PATH=../video/queue_sample.mp4
+QE_CAMERA_VIDEO_PATH=video/ELEC3442_queue.mp4
 QE_DATABASE_URL=sqlite:///data/queue.db
 ```
 
@@ -144,14 +137,14 @@ QE_SITE_DISPLAY_NAME=Lab queue camera
 Development machine (video file):
 
 ```bash
-QE_CAMERA_SOURCE=video QE_CAMERA_VIDEO_PATH=../video/queue_sample.mp4 \
+QE_CAMERA_SOURCE=video QE_CAMERA_VIDEO_PATH=video/ELEC3442_queue.mp4 \
 uv run smart-queue
 ```
 
 Raspberry Pi (PiCamera2 + Sense HAT + NCNN):
 
 ```bash
-# If NCNN dir is missing, export per ../README.md then copy into ../models/.
+# If NCNN dir is missing, export per ../README.md then copy into models/.
 QE_CAMERA_SOURCE=picamera uv run smart-queue
 ```
 

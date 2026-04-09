@@ -14,13 +14,10 @@ dependencies = [
     "pydantic-settings>=2.13.1",
     "sqlmodel>=0.0.37",
     "opencv-python-headless>=4.13",
-    "ultralytics>=8.4.0",
+    "ultralytics>=8.4.36",
 ]
 
 [project.optional-dependencies]
-test = [
-    "pytest>=8.4.0",
-]
 pi = [
     "picamera2",
     "sense-hat",
