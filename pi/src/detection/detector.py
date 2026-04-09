@@ -7,6 +7,7 @@ from pathlib import Path
 
 import numpy as np
 from loguru import logger
+import cv2
 
 from config import Settings
 from detection.model_path import resolve_model_path
@@ -49,23 +50,26 @@ def _nms_xyxy(
     scores: list[float],
     iou_threshold: float,
 ) -> list[int]:
-    """Return indices kept after greedy NMS."""
-
+    """Return indices kept after NMS (OpenCV implementation)."""
     if not boxes:
         return []
-    order = sorted(range(len(boxes)), key=lambda i: scores[i], reverse=True)
-    keep: list[int] = []
-    while order:
-        i = order.pop(0)
-        keep.append(i)
-        if not order:
-            break
-        remaining: list[int] = []
-        for j in order:
-            if _iou_xyxy(boxes[i], boxes[j]) <= iou_threshold:
-                remaining.append(j)
-        order = remaining
-    return keep
+
+    b = []
+    for (x1, y1, x2, y2) in boxes:
+        w = max(0.0, x2 - x1)
+        h = max(0.0, y2 - y1)
+        b.append([float(x1), float(y1), float(w), float(h)])
+    # score_threshold is already applied upstream; use 0.0 here.
+    idxs = cv2.dnn.NMSBoxes(
+        b,
+        [float(s) for s in scores],
+        score_threshold=0.0,
+        nms_threshold=float(iou_threshold),
+    )
+    if idxs is None:
+        return []
+    # OpenCV may return shape (N,1) or a flat list depending on version.
+    return [int(i) for i in np.array(idxs).reshape(-1).tolist()]
 
 
 class _NcnnYoloPersonDetector:
@@ -145,6 +149,16 @@ class _NcnnYoloPersonDetector:
             score = float(row[cls0_idx])
             if score < self._settings.yolo_confidence:
                 continue
+
+            # Some exports output boxes normalized to [0, 1] (relative to the network input),
+            # while others output in absolute pixels of the network input. If we interpret
+            # normalized values as pixels, all boxes collapse near (0, 0) in the preview.
+            if max(cx, cy, w, h) <= 2.0:
+                cx *= float(imgsz)
+                cy *= float(imgsz)
+                w *= float(imgsz)
+                h *= float(imgsz)
+
             x1 = cx - w / 2.0
             y1 = cy - h / 2.0
             x2 = cx + w / 2.0

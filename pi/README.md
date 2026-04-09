@@ -67,6 +67,16 @@ QE_CAMERA_FPS=10
 QE_DATABASE_URL=sqlite:///data/queue.db
 ```
 
+### Preview stream
+
+| Variable | Description |
+| --- | --- |
+| `QE_PREVIEW_ENABLED` | Enable/disable preview frame encoding (default `true`). |
+| `QE_PREVIEW_FPS` | Max preview encode FPS (default `5`). |
+| `QE_PREVIEW_WIDTH` | Preview JPEG width (default `640`). |
+| `QE_PREVIEW_HEIGHT` | Preview JPEG height (default `480`). |
+| `QE_PREVIEW_JPEG_QUALITY` | JPEG quality \(0-100\) (default `70`). |
+
 Use local video file as input (development/testing):
 
 ```env

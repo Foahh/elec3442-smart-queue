@@ -51,22 +51,27 @@ class PreviewRequestHandler(BaseHTTPRequestHandler):
         """Silence default per-request stderr logging."""
 
     def _handle_preview_stream(self) -> None:
+        self.server.shared_state.preview_client_connected()
         self.send_response(HTTPStatus.OK)
         self.send_header("Cache-Control", "no-cache")
         self.send_header("Connection", "close")
         self.send_header("Content-Type", "multipart/x-mixed-replace; boundary=frame")
         self.end_headers()
-
-        while True:
-            jpg = self.server.shared_state.get_preview_jpeg()
-            if jpg:
-                self.wfile.write(b"--frame\r\n")
-                self.wfile.write(b"Content-Type: image/jpeg\r\n")
-                self.wfile.write(f"Content-Length: {len(jpg)}\r\n\r\n".encode("ascii"))
-                self.wfile.write(jpg)
-                self.wfile.write(b"\r\n")
-                self.wfile.flush()
-            time.sleep(0.03)
+        try:
+            while True:
+                jpg = self.server.shared_state.get_preview_jpeg()
+                if jpg:
+                    self.wfile.write(b"--frame\r\n")
+                    self.wfile.write(b"Content-Type: image/jpeg\r\n")
+                    self.wfile.write(
+                        f"Content-Length: {len(jpg)}\r\n\r\n".encode("ascii")
+                    )
+                    self.wfile.write(jpg)
+                    self.wfile.write(b"\r\n")
+                    self.wfile.flush()
+                time.sleep(0.03)
+        finally:
+            self.server.shared_state.preview_client_disconnected()
 
 
 def create_preview_http_server(

@@ -13,6 +13,8 @@ from typing import TYPE_CHECKING, Any
 from loguru import logger
 
 from config import Settings
+from database import get_session
+from db_models import PeerSiteSnapshot
 
 if TYPE_CHECKING:
     from main import SharedState
@@ -96,6 +98,7 @@ class HubSyncAgent:
         self._peer_cache = peer_cache
         self._push_backoff = settings.hub_push_interval
         self._pull_backoff = settings.hub_pull_interval
+        self._last_pulled_snapshots: list[SiteSnapshot] = []
 
     def run(self) -> None:
         """Run push and pull loops indefinitely (call in daemon thread)."""
@@ -104,12 +107,24 @@ class HubSyncAgent:
         last_pull = 0.0
         while True:
             now = time.monotonic()
+            did_push = False
+            did_pull = False
             if now - last_push >= self._push_backoff:
-                self._do_push()
+                did_push = self._do_push()
                 last_push = time.monotonic()
             if now - last_pull >= self._pull_backoff:
-                self._do_pull()
+                did_pull = self._do_pull()
                 last_pull = time.monotonic()
+
+            # If either operation produced DB-side updates, commit them together.
+            if did_push or did_pull:
+                try:
+                    with get_session() as session:
+                        if did_pull:
+                            self._persist_peers(session)
+                        session.commit()
+                except Exception as exc:
+                    logger.warning("Hub sync DB commit failed: {}", exc)
             time.sleep(0.5)
 
     # ------------------------------------------------------------------ push
@@ -147,10 +162,10 @@ class HubSyncAgent:
             }
         return body
 
-    def _do_push(self) -> None:
+    def _do_push(self) -> bool:
         body = self._build_body()
         if body is None:
-            return
+            return False
         url = self._settings.hub_url.rstrip("/") + "/api/ingest"
         data = json.dumps(body).encode()
         req = urllib.request.Request(
@@ -167,17 +182,18 @@ class HubSyncAgent:
             with urllib.request.urlopen(req, timeout=4) as resp:
                 if resp.status == 200:
                     self._push_backoff = self._settings.hub_push_interval
-                    return
+                    return True
                 raise urllib.error.HTTPError(url, resp.status, "non-200", {}, None)  # type: ignore[arg-type]
         except Exception as exc:
             logger.warning(
                 "Hub push failed: {}; backoff={:.0f}s", exc, self._push_backoff
             )
             self._push_backoff = min(self._push_backoff * 2, 60.0)
+            return False
 
     # ------------------------------------------------------------------ pull
 
-    def _do_pull(self) -> None:
+    def _do_pull(self) -> bool:
         url = self._settings.hub_url.rstrip("/") + "/api/sites"
         req = urllib.request.Request(url, headers=dict(_HUB_HEADERS_BASE), method="GET")
         try:
@@ -202,9 +218,37 @@ class HubSyncAgent:
                 for s in payload.get("sites", [])
             ]
             self._peer_cache.update(snapshots)
+            self._last_pulled_snapshots = snapshots
             self._pull_backoff = self._settings.hub_pull_interval
+            return True
         except Exception as exc:
             logger.warning(
                 "Hub pull failed: {}; backoff={:.0f}s", exc, self._pull_backoff
             )
             self._pull_backoff = min(self._pull_backoff * 2, 60.0)
+            return False
+
+    def _persist_peers(self, session: Any) -> None:
+        """Upsert latest peer snapshots into local DB."""
+
+        snapshots = getattr(self, "_last_pulled_snapshots", None)
+        if not snapshots:
+            return
+        for s in snapshots:
+            session.merge(
+                PeerSiteSnapshot(
+                    site_id=s.site_id,
+                    display_name=s.display_name,
+                    queue_length=s.queue_length,
+                    estimated_wait_seconds=s.estimated_wait_seconds,
+                    busyness_level=s.busyness_level,
+                    comfort_score=s.comfort_score,
+                    updated_at=s.updated_at,
+                    stale=s.stale,
+                    temperature_c=s.temperature_c,
+                    humidity_pct=s.humidity_pct,
+                    pressure_hpa=s.pressure_hpa,
+                    latitude=s.latitude,
+                    longitude=s.longitude,
+                )
+            )

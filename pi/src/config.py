@@ -69,6 +69,13 @@ class Settings(BaseSettings):
     api_host: str = "0.0.0.0"
     api_port: int = 8000
 
+    # Preview encoding (MJPEG)
+    preview_enabled: bool = True
+    preview_fps: int = 5
+    preview_width: int = 640
+    preview_height: int = 480
+    preview_jpeg_quality: int = 70
+
     # Database
     database_url: str = "sqlite:///data/queue.db"
 

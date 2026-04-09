@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-import cv2
 import numpy as np
 
 from camera.base import CameraSource
@@ -34,7 +33,7 @@ class PiCameraSource(CameraSource):
         config = self._camera.create_preview_configuration(
             main={
                 "size": (self._settings.camera_width, self._settings.camera_height),
-                "format": "XRGB8888",
+                "format": "BGR888",
             }
         )
         self._camera.configure(config)
@@ -48,8 +47,6 @@ class PiCameraSource(CameraSource):
         frame = self._camera.capture_array()
         if frame is None:
             return None
-        if frame.ndim == 3 and frame.shape[2] == 4:
-            return cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
         if frame.ndim == 3 and frame.shape[2] == 3:
             return frame
         return None

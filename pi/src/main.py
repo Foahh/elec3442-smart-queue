@@ -37,6 +37,7 @@ class SharedState:
         self._status: QueueStatusResponse | None = None
         self._preview_jpeg: bytes | None = None
         self._sensors: SensorReading | None = None
+        self._preview_clients: int = 0
 
     def update(self, status: QueueStatusResponse) -> None:
         """Store latest queue status."""
@@ -61,6 +62,24 @@ class SharedState:
 
         with self._lock:
             return self._preview_jpeg
+
+    def preview_client_connected(self) -> None:
+        """Increment connected preview clients count."""
+
+        with self._lock:
+            self._preview_clients += 1
+
+    def preview_client_disconnected(self) -> None:
+        """Decrement connected preview clients count."""
+
+        with self._lock:
+            self._preview_clients = max(0, self._preview_clients - 1)
+
+    def preview_client_count(self) -> int:
+        """Return number of connected preview clients."""
+
+        with self._lock:
+            return self._preview_clients
 
     def update_sensors(self, sensors: SensorReading) -> None:
         """Store latest sensor reading."""
@@ -152,9 +171,7 @@ def camera_loop(settings: Settings, state: SharedState, peer_cache: PeerCache) -
     last_snapshot_time = time.monotonic()
     last_level: str | None = None
 
-    # to set the real-time output window size
-    DISPLAY_WIDTH = 800
-    DISPLAY_HEIGHT = 600
+    last_preview_encoded_at = 0.0
 
     try:
         with make_camera(settings) as camera:
@@ -263,81 +280,109 @@ def camera_loop(settings: Settings, state: SharedState, peer_cache: PeerCache) -
                     )
                     state.update(status)
 
-                    # create visualization frame with bounding boxes and zone
-                    vis_frame = frame.copy()
-                    # ROI border (ROI == full cropped frame).
-                    h_vis, w_vis = vis_frame.shape[:2]
-                    cv2.rectangle(
-                        vis_frame,
-                        (0, 0),
-                        (max(w_vis - 1, 0), max(h_vis - 1, 0)),
-                        color=(255, 0, 255),
-                        thickness=2,
+                    should_encode_preview = (
+                        settings.preview_enabled
+                        and state.preview_client_count() > 0
+                        and (time.monotonic() - last_preview_encoded_at)
+                        >= (1.0 / max(int(settings.preview_fps), 1))
                     )
-
-                    zone_pts = _zone_polygon_pixels(
-                        settings.queue_zone, vis_frame.shape[:2]
-                    )
-                    if zone_pts is not None:
-                        cv2.polylines(
+                    if should_encode_preview:
+                        # create visualization frame with bounding boxes and zone
+                        vis_frame = frame.copy()
+                        # ROI border (ROI == full cropped frame).
+                        h_vis, w_vis = vis_frame.shape[:2]
+                        cv2.rectangle(
                             vis_frame,
-                            [zone_pts],
-                            True,
-                            color=(0, 255, 255),
+                            (0, 0),
+                            (max(w_vis - 1, 0), max(h_vis - 1, 0)),
+                            color=(255, 0, 255),
                             thickness=2,
                         )
 
-                    # draw boxes for all persons
-                    for person in persons:
-                        x1, y1, x2, y2 = [int(coord) for coord in person.bbox_xyxy]
-                        color = (
-                            (0, 255, 0) if person in in_zone_persons else (0, 0, 255)
+                        zone_pts = _zone_polygon_pixels(
+                            settings.queue_zone, vis_frame.shape[:2]
                         )
-                        cv2.rectangle(
-                            vis_frame, (x1, y1), (x2, y2), color=color, thickness=2
-                        )
-                        # add track ID
-                        if hasattr(person, "track_id") and person.track_id is not None:
-                            cv2.putText(
+                        if zone_pts is not None:
+                            cv2.polylines(
                                 vis_frame,
-                                f"ID {person.track_id}",
-                                (x1, y1 - 5),
-                                cv2.FONT_HERSHEY_SIMPLEX,
-                                0.5,
-                                color,
-                                1,
+                                [zone_pts],
+                                True,
+                                color=(0, 255, 255),
+                                thickness=2,
                             )
 
-                    # Add status overlay
-                    status_text = f"Queue: {queue_length} | Wait: {wait_seconds:.0f}s | Level: {level.upper()} | FPS: {effective_fps:.1f}"
-                    cv2.putText(
-                        vis_frame,
-                        status_text,
-                        (10, 30),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        0.7,
-                        (255, 255, 255),
-                        2,
-                    )
-                    time_str = frame_time.strftime("%Y-%m-%d %H:%M:%S")
-                    cv2.putText(
-                        vis_frame,
-                        time_str,
-                        (10, 60),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        0.5,
-                        (255, 255, 255),
-                        1,
-                    )
+                        # draw boxes for all persons
+                        for person in persons:
+                            x1, y1, x2, y2 = [
+                                int(coord) for coord in person.bbox_xyxy
+                            ]
+                            color = (
+                                (0, 255, 0)
+                                if person in in_zone_persons
+                                else (0, 0, 255)
+                            )
+                            cv2.rectangle(
+                                vis_frame,
+                                (x1, y1),
+                                (x2, y2),
+                                color=color,
+                                thickness=2,
+                            )
+                            # add track ID
+                            if (
+                                hasattr(person, "track_id")
+                                and person.track_id is not None
+                            ):
+                                cv2.putText(
+                                    vis_frame,
+                                    f"ID {person.track_id}",
+                                    (x1, y1 - 5),
+                                    cv2.FONT_HERSHEY_SIMPLEX,
+                                    0.5,
+                                    color,
+                                    1,
+                                )
 
-                    resized_frame = cv2.resize(
-                        vis_frame, (DISPLAY_WIDTH, DISPLAY_HEIGHT)
-                    )
-                    ok, buf = cv2.imencode(
-                        ".jpg", resized_frame, [cv2.IMWRITE_JPEG_QUALITY, 85]
-                    )
-                    if ok:
-                        state.set_preview_jpeg(buf.tobytes())
+                        # Add status overlay
+                        status_text = (
+                            f"Queue: {queue_length} | Wait: {wait_seconds:.0f}s | "
+                            f"Level: {level.upper()} | FPS: {effective_fps:.1f}"
+                        )
+                        cv2.putText(
+                            vis_frame,
+                            status_text,
+                            (10, 30),
+                            cv2.FONT_HERSHEY_SIMPLEX,
+                            0.7,
+                            (255, 255, 255),
+                            2,
+                        )
+                        time_str = frame_time.strftime("%Y-%m-%d %H:%M:%S")
+                        cv2.putText(
+                            vis_frame,
+                            time_str,
+                            (10, 60),
+                            cv2.FONT_HERSHEY_SIMPLEX,
+                            0.5,
+                            (255, 255, 255),
+                            1,
+                        )
+
+                        resized_frame = cv2.resize(
+                            vis_frame,
+                            (int(settings.preview_width), int(settings.preview_height)),
+                        )
+                        ok, buf = cv2.imencode(
+                            ".jpg",
+                            resized_frame,
+                            [
+                                cv2.IMWRITE_JPEG_QUALITY,
+                                int(settings.preview_jpeg_quality),
+                            ],
+                        )
+                        if ok:
+                            state.set_preview_jpeg(buf.tobytes())
+                            last_preview_encoded_at = time.monotonic()
 
                     if (
                         time.monotonic() - last_snapshot_time

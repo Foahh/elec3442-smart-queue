@@ -27,3 +27,21 @@ class PersonEvent(SQLModel, table=True):
     exit_time: datetime
     dwell_seconds: float
     date_hour: str
+
+
+class PeerSiteSnapshot(SQLModel, table=True):
+    """Latest snapshot for a peer site pulled from the hub."""
+
+    site_id: str = Field(primary_key=True)
+    display_name: str
+    queue_length: int
+    estimated_wait_seconds: float
+    busyness_level: str
+    comfort_score: float | None = None
+    updated_at: int
+    stale: bool
+    temperature_c: float | None = None
+    humidity_pct: float | None = None
+    pressure_hpa: float | None = None
+    latitude: float | None = None
+    longitude: float | None = None
