@@ -54,16 +54,19 @@ class CameraLoopRunner:
         """Process frames until shutdown."""
 
         try:
-            with make_camera(self._settings) as camera:
-                while True:
-                    loop_started_at = time.monotonic()
-                    try:
-                        self._process_frame(camera, loop_started_at)
-                    except Exception:
-                        logger.exception("Unexpected camera loop error")
-                        time.sleep(0.1)
-        except Exception:
-            logger.exception("Camera source failure")
+            try:
+                with make_camera(self._settings) as camera:
+                    while True:
+                        loop_started_at = time.monotonic()
+                        try:
+                            self._process_frame(camera, loop_started_at)
+                        except Exception:
+                            logger.exception("Unexpected camera loop error")
+                            time.sleep(0.1)
+            except Exception:
+                logger.exception("Camera source failure")
+        finally:
+            self._preview.shutdown()
 
     def _process_frame(self, camera: CameraSource, loop_started_at: float) -> None:
         frame_time = datetime.now(UTC)
