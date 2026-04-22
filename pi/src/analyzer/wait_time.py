@@ -82,9 +82,14 @@ class WaitTimeEstimator:
     def estimate_wait_seconds(self, queue_length: int) -> float:
         """Estimate queue wait time in seconds."""
 
+        if queue_length <= 0:
+            return 0.0
+
         throughput = self.throughput_per_minute
         if throughput <= 0.0:
-            return self._settings.max_wait_seconds
+            # Let caller-side floor logic (observed dwell) drive early estimates.
+            return 0.0
+
         wait_seconds = (float(queue_length) / throughput) * 60.0
         return min(wait_seconds, self._settings.max_wait_seconds)
 
