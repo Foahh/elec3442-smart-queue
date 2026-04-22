@@ -1,0 +1,57 @@
+erDiagram
+    QueueSnapshot {
+        int id PK
+        datetime timestamp
+        int queue_length
+        float estimated_wait_seconds
+        float throughput_per_minute
+        string busyness_level
+    }
+    PersonEvent {
+        int id PK
+        int track_id
+        datetime entry_time
+        datetime exit_time
+        float dwell_seconds
+        string date_hour
+    }
+    PeerSiteSnapshot {
+        string site_id PK
+        string display_name
+        int queue_length
+        float estimated_wait_seconds
+        string busyness_level
+        float comfort_score
+        int updated_at
+        bool stale
+        float temperature_c
+        float humidity_pct
+        float pressure_hpa
+    }
+    site_status {
+        string site_id PK
+        string display_name
+        float latitude
+        float longitude
+        int queue_length
+        float estimated_wait_seconds
+        string busyness_level
+        float comfort_score
+        int updated_at
+        float temperature_c
+        float humidity_pct
+        float pressure_hpa
+    }
+    site_snapshots {
+        int id PK
+        string site_id FK
+        int timestamp
+        int queue_length
+        float estimated_wait_seconds
+        string busyness_level
+        float comfort_score
+        float temperature_c
+        float humidity_pct
+        float pressure_hpa
+    }
+    site_status ||--o{ site_snapshots : "history"

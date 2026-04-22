@@ -1,0 +1,21 @@
+flowchart TB
+    A[Capture frame<br/>PiCamera2 RGB888] --> B[Center square crop]
+    B --> C[YOLO26 NCNN inference<br/>imgsz=640, conf=0.4, IoU=0.5<br/>class=0 person only]
+    C --> D[ByteTrack association<br/>track_id assigned]
+    D --> E{Center inside<br/>queue polygon?}
+    E -- no --> F[Ignore]
+    E -- yes --> G[Queue State Tracker]
+    G --> H{Track departed<br/>and dwell ≥ 3 s?}
+    H -- yes --> I[Emit PersonEvent<br/>entry, exit, dwell]
+    H -- no --> G
+    I --> J[Wait Estimator<br/>rolling 15-min throughput]
+    G --> K[Queue length = active tracks]
+    J --> L[Wait = len / throughput]
+    L --> M[Busyness level<br/>green / yellow / red]
+    K --> M
+    M --> N[Sense HAT render]
+    L --> O[Comfort Score<br/>with T / RH / P]
+    O --> P[QueueStatusResponse]
+    P --> Q[Shared state +<br/>MJPEG overlay]
+    P --> R[Snapshot<br/>every 30 s → SQLite]
+    P --> S[Hub Sync push<br/>every 2.5 s]

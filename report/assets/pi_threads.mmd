@@ -1,0 +1,23 @@
+flowchart LR
+    subgraph MAIN["main thread"]
+        ML[Camera Loop<br/>capture → detect<br/>→ track → persist]
+    end
+    subgraph PREVT["preview-encoder thread"]
+        PE[Annotate frame<br/>JPEG encode]
+    end
+    subgraph HTTPT["preview-http thread"]
+        PS[MJPEG HTTP<br/>/preview]
+    end
+    subgraph SYNCT["hub-sync thread"]
+        HS[Push status<br/>Pull peers]
+    end
+    SS[(SharedState<br/>status + sensors<br/>jpeg + client count)]
+    PC[(PeerCache)]
+
+    ML <--> SS
+    PE <--> SS
+    PS <--> SS
+    HS <--> SS
+    HS <--> PC
+    ML <--> PC
+    ML -. ping-pong buffers .- PE

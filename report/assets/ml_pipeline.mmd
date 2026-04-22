@@ -1,0 +1,12 @@
+flowchart LR
+    A[CrowdHuman<br/>on Hugging Face] -->|HF datasets<br/>load_dataset| B[download_dataset.py]
+    B -->|person-only<br/>YOLO format| C[images/<br/>labels/<br/>classes.txt]
+    C --> D[crowdhuman_ultralytics.yaml<br/>nc=1, names: person]
+    E[yolo26n.pt<br/>Ultralytics weights] --> F[finetune_yolo26.py]
+    D --> F
+    F -->|100 epochs<br/>imgsz 512, bs 16| G[best.pt]
+    G --> H[export_yolo26.py]
+    D -->|INT8 calibration| H
+    H -->|"ultralytics[export]"| I[yolo26n_ncnn_model/<br/>.param + .bin]
+    I -->|scp / copy| J[pi/models/yolo26n_ncnn_model/]
+    J --> K[PersonDetector on Pi<br/>CPU inference]

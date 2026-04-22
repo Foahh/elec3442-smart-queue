@@ -1,0 +1,29 @@
+sequenceDiagram
+    participant L as Camera Loop
+    participant S as SharedState
+    participant H as HubSyncAgent
+    participant W as Web /api/ingest
+    participant D as Cloudflare D1
+    participant U as Browser
+    participant G as Web /api/sites
+
+    L->>S: update(QueueStatusResponse)
+    loop every push_interval (2.5 s)
+        H->>S: get()
+        S-->>H: latest status + sensors
+        H->>W: POST /api/ingest<br/>X-Api-Key
+        W->>D: UPSERT site_status
+        W->>D: INSERT site_snapshots
+        W-->>H: 200 OK
+    end
+    loop every pull_interval (2.5 s)
+        H->>G: GET /api/sites
+        G->>D: SELECT site_status
+        G-->>H: sites[]
+        H->>H: PeerCache.update()
+    end
+    U->>G: GET /api/sites (SSR/poll)
+    G-->>U: sites[] JSON
+    U->>W: GET /api/history?site_id=...
+    W->>D: SELECT site_snapshots
+    W-->>U: snapshots[]
