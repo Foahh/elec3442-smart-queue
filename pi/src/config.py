@@ -47,6 +47,8 @@ class Settings(BaseSettings):
     snapshots_per_minute: int = 2
     max_wait_seconds: float = 900.0
     cold_start_wait_seconds: float = 30.0
+    wait_max_drop_per_second: float = 20.0
+    wait_max_drop_per_frame: float = 8.0
 
     # LED thresholds
     led_green_max: int = 3
