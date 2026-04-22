@@ -88,6 +88,14 @@ class QueueStateTracker:
 
         return completed
 
+    def oldest_wait_seconds(self, now: datetime) -> float:
+        """Return wait time of the oldest currently active track."""
+
+        if not self._active_tracks:
+            return 0.0
+        oldest = min(record.first_seen for record in self._active_tracks.values())
+        return max((now - oldest).total_seconds(), 0.0)
+
     def reset(self) -> None:
         """Clear active tracks, used when replay inputs rewind."""
 

@@ -102,6 +102,12 @@ class CameraLoopRunner:
         queue_length = self._tracker.current_queue_length
         throughput = self._estimator.throughput_per_minute
         wait_seconds = self._estimator.estimate_wait_seconds(queue_length)
+        if queue_length > 0:
+            observed_wait_floor = self._tracker.oldest_wait_seconds(frame_time)
+            wait_seconds = min(
+                max(wait_seconds, observed_wait_floor),
+                self._settings.max_wait_seconds,
+            )
         level = self._estimator.busyness_level(queue_length)
 
         comfort_score, comfort_label = self._compute_comfort(wait_seconds)
