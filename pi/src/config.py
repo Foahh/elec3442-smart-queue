@@ -43,6 +43,7 @@ class Settings(BaseSettings):
     # Wait time estimation
     throughput_window_minutes: int = 15
     min_dwell_seconds: float = 3.0
+    track_lost_grace_seconds: float = 1.5
     snapshots_per_minute: int = 2
     max_wait_seconds: float = 900.0
 

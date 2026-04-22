@@ -76,6 +76,14 @@ class CameraLoopRunner:
             time.sleep(0.1)
             return
 
+        if camera.poll_rewound():
+            logger.info(
+                "Video input rewound; resetting tracker and wait estimator to avoid replay double-counting"
+            )
+            self._tracker.reset()
+            self._estimator.reset(preserve_throughput=True)
+            self._last_level = None
+
         frame = center_square_crop(frame)
 
         inference_started_at = time.monotonic()

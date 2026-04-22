@@ -54,14 +54,21 @@ class QueueStateTracker:
                 record.last_seen = frame_time
 
         completed: list[PersonEvent] = []
+        grace = max(float(self._settings.track_lost_grace_seconds), 0.0)
         departed_ids = [
             track_id
             for track_id in self._active_tracks
             if track_id not in current_track_ids
         ]
+
         for track_id in departed_ids:
-            record = self._active_tracks.pop(track_id)
-            exit_time = frame_time
+            record = self._active_tracks[track_id]
+            missing_seconds = (frame_time - record.last_seen).total_seconds()
+            if missing_seconds < grace:
+                continue
+
+            self._active_tracks.pop(track_id, None)
+            exit_time = record.last_seen
             dwell = (exit_time - record.first_seen).total_seconds()
             if dwell >= self._settings.min_dwell_seconds:
                 event = PersonEvent(
@@ -73,11 +80,18 @@ class QueueStateTracker:
                 )
                 completed.append(event)
                 logger.info(
-                    "Person exited queue zone | track_id={} dwell_seconds={:.2f}",
+                    "Person exited queue zone | track_id={} dwell_seconds={:.2f} missing_seconds={:.2f}",
                     track_id,
                     dwell,
+                    missing_seconds,
                 )
+
         return completed
+
+    def reset(self) -> None:
+        """Clear active tracks, used when replay inputs rewind."""
+
+        self._active_tracks.clear()
 
     @property
     def current_queue_length(self) -> int:

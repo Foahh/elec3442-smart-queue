@@ -28,6 +28,11 @@ class CameraSource(ABC):
     def stop(self) -> None:
         """Stop and release camera resource."""
 
+    def poll_rewound(self) -> bool:
+        """Return True once when input stream rewinds to the beginning."""
+
+        return False
+
     def __enter__(self) -> CameraSource:
         """Context manager enter."""
 

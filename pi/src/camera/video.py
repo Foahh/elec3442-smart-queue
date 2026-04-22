@@ -24,6 +24,7 @@ class VideoFileSource(CameraSource):
 
         self._settings = settings
         self._capture: cv2.VideoCapture | None = None
+        self._rewound = False
 
     @property
     def color_space(self):  # type: ignore[override]
@@ -59,10 +60,18 @@ class VideoFileSource(CameraSource):
         self._capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
         ok, frame = self._capture.read()
         if ok:
+            self._rewound = True
             return frame
 
         logger.warning("Failed to read frame from video file")
         return None
+
+    def poll_rewound(self) -> bool:
+        """Consume and return rewind state for EOF-looped video inputs."""
+
+        rewound = self._rewound
+        self._rewound = False
+        return rewound
 
     def stop(self) -> None:
         """Release video resource."""
