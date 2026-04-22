@@ -87,8 +87,8 @@ class WaitTimeEstimator:
 
         throughput = self.throughput_per_minute
         if throughput <= 0.0:
-            # Let caller-side floor logic (observed dwell) drive early estimates.
-            return 0.0
+            base = max(float(self._settings.cold_start_wait_seconds), 0.0)
+            return min(float(queue_length) * base, self._settings.max_wait_seconds)
 
         wait_seconds = (float(queue_length) / throughput) * 60.0
         return min(wait_seconds, self._settings.max_wait_seconds)

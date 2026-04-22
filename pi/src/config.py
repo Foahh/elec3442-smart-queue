@@ -46,6 +46,7 @@ class Settings(BaseSettings):
     track_lost_grace_seconds: float = 1.5
     snapshots_per_minute: int = 2
     max_wait_seconds: float = 900.0
+    cold_start_wait_seconds: float = 30.0
 
     # LED thresholds
     led_green_max: int = 3
