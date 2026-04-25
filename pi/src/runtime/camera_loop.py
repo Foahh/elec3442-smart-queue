@@ -49,9 +49,6 @@ class CameraLoopRunner:
         self._snapshot_interval_seconds = 60.0 / max(settings.snapshots_per_minute, 1)
         self._last_snapshot_time = time.monotonic()
         self._last_level: str | None = None
-        self._last_wait_seconds: float | None = None
-        self._last_wait_time: datetime | None = None
-        self._last_queue_length: int = 0
 
     def run(self) -> None:
         """Process frames until shutdown."""
@@ -84,11 +81,8 @@ class CameraLoopRunner:
                 "Video input rewound; resetting tracker and wait estimator to avoid replay double-counting"
             )
             self._tracker.reset()
-            self._estimator.reset(preserve_throughput=True)
+            self._estimator.reset()
             self._last_level = None
-            self._last_wait_seconds = None
-            self._last_wait_time = None
-            self._last_queue_length = 0
 
         frame = center_square_crop(frame)
 
@@ -108,17 +102,10 @@ class CameraLoopRunner:
         queue_length = self._tracker.current_queue_length
         throughput = self._estimator.throughput_per_minute
         wait_seconds = self._estimator.estimate_wait_seconds(queue_length)
-        if queue_length > 0:
-            observed_wait_floor = self._tracker.oldest_wait_seconds(frame_time)
-            wait_seconds = min(
-                max(wait_seconds, observed_wait_floor),
-                self._settings.max_wait_seconds,
-            )
-
-        wait_seconds = self._stabilize_wait(
-            wait_seconds=wait_seconds,
-            queue_length=queue_length,
-            frame_time=frame_time,
+        estimated_wait_human = (
+            "—"
+            if queue_length > 0 and throughput <= 0.0
+            else humanize_wait(wait_seconds)
         )
         level = self._estimator.busyness_level(queue_length)
 
@@ -144,7 +131,7 @@ class CameraLoopRunner:
             timestamp=frame_time,
             queue_length=queue_length,
             estimated_wait_seconds=wait_seconds,
-            estimated_wait_human=humanize_wait(wait_seconds),
+            estimated_wait_human=estimated_wait_human,
             throughput_per_minute=throughput,
             busyness_level=level,
             comfort_score=comfort_score,
@@ -170,38 +157,6 @@ class CameraLoopRunner:
         self._log_level_transition(level)
         self._update_display(level, queue_length)
         self._sleep_to_target_fps(loop_started_at)
-
-    def _stabilize_wait(
-        self,
-        *,
-        wait_seconds: float,
-        queue_length: int,
-        frame_time: datetime,
-    ) -> float:
-        """Prevent abrupt wait-time cliffs caused by noisy early throughput."""
-
-        clipped = min(max(wait_seconds, 0.0), self._settings.max_wait_seconds)
-        if self._last_wait_seconds is None or self._last_wait_time is None:
-            self._last_wait_seconds = clipped
-            self._last_wait_time = frame_time
-            self._last_queue_length = queue_length
-            return clipped
-
-        stable = clipped
-        if queue_length >= self._last_queue_length:
-            stable = max(stable, self._last_wait_seconds)
-        else:
-            elapsed = max((frame_time - self._last_wait_time).total_seconds(), 0.0)
-            max_drop_by_time = max(float(self._settings.wait_max_drop_per_second), 0.0) * elapsed
-            max_drop_by_frame = max(float(self._settings.wait_max_drop_per_frame), 0.0)
-            allowed_drop = min(max_drop_by_time, max_drop_by_frame)
-            stable = max(stable, self._last_wait_seconds - allowed_drop)
-
-        stable = min(max(stable, 0.0), self._settings.max_wait_seconds)
-        self._last_wait_seconds = stable
-        self._last_wait_time = frame_time
-        self._last_queue_length = queue_length
-        return stable
 
     def _read_sensors(self) -> None:
         if not hasattr(self._display, "read_sensors"):

@@ -288,7 +288,7 @@ class PreviewRenderer:
         frame_timestamp: str,
     ) -> None:
         status_text = (
-            f"Queue: {status.queue_length} | Wait: {status.estimated_wait_seconds:.0f}s | "
+            f"Queue: {status.queue_length} | Wait: {status.estimated_wait_human} | "
             f"Level: {status.busyness_level.upper()} | FPS: {status.effective_fps:.1f}"
         )
         cv2.putText(

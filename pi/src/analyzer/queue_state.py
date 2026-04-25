@@ -54,7 +54,6 @@ class QueueStateTracker:
                 record.last_seen = frame_time
 
         completed: list[PersonEvent] = []
-        grace = max(float(self._settings.track_lost_grace_seconds), 0.0)
         departed_ids = [
             track_id
             for track_id in self._active_tracks
@@ -62,13 +61,10 @@ class QueueStateTracker:
         ]
 
         for track_id in departed_ids:
-            record = self._active_tracks[track_id]
-            missing_seconds = (frame_time - record.last_seen).total_seconds()
-            if missing_seconds < grace:
+            record = self._active_tracks.pop(track_id, None)
+            if record is None:
                 continue
-
-            self._active_tracks.pop(track_id, None)
-            exit_time = record.last_seen
+            exit_time = frame_time
             dwell = (exit_time - record.first_seen).total_seconds()
             if dwell >= self._settings.min_dwell_seconds:
                 event = PersonEvent(
@@ -80,10 +76,9 @@ class QueueStateTracker:
                 )
                 completed.append(event)
                 logger.info(
-                    "Person exited queue zone | track_id={} dwell_seconds={:.2f} missing_seconds={:.2f}",
+                    "Person exited queue zone | track_id={} dwell_seconds={:.2f}",
                     track_id,
                     dwell,
-                    missing_seconds,
                 )
 
         return completed

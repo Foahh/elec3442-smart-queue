@@ -18,7 +18,6 @@ class WaitTimeEstimator:
 
         self._settings = settings
         self._events: deque[PersonEvent] = deque()
-        self._bootstrap_throughput_per_minute: float = 0.0
 
     def add_event(self, event: PersonEvent) -> None:
         """Add completed person event and prune old events."""
@@ -26,13 +25,9 @@ class WaitTimeEstimator:
         self._events.append(event)
         self._prune()
 
-    def reset(self, *, preserve_throughput: bool = False) -> None:
-        """Clear rolling statistics and optionally keep a bootstrap throughput."""
+    def reset(self) -> None:
+        """Clear rolling statistics."""
 
-        if preserve_throughput:
-            self._bootstrap_throughput_per_minute = self._compute_throughput_from_events()
-        else:
-            self._bootstrap_throughput_per_minute = 0.0
         self._events.clear()
 
     def _prune(self) -> None:
@@ -47,37 +42,23 @@ class WaitTimeEstimator:
             self._events.popleft()
 
     def _compute_throughput_from_events(self) -> float:
-        """Compute throughput using current event deque only."""
+        """Compute throughput using the rolling window size."""
 
-        if not self._events or len(self._events) < 2:
+        if not self._events:
             return 0.0
 
         window_minutes = float(self._settings.throughput_window_minutes)
         if window_minutes <= 0:
             return 0.0
 
-        span_seconds = (
-            self._events[-1].exit_time - self._events[0].exit_time
-        ).total_seconds()
-        if span_seconds <= 0:
-            return 0.0
-
-        effective_minutes = min(window_minutes, span_seconds / 60.0)
-        if effective_minutes <= 0.0:
-            return 0.0
-
-        return float(len(self._events)) / effective_minutes
+        return float(len(self._events)) / window_minutes
 
     @property
     def throughput_per_minute(self) -> float:
         """Return rolling throughput in persons per minute."""
 
         self._prune()
-        throughput = self._compute_throughput_from_events()
-        if throughput > 0.0:
-            self._bootstrap_throughput_per_minute = throughput
-            return throughput
-        return self._bootstrap_throughput_per_minute
+        return self._compute_throughput_from_events()
 
     def estimate_wait_seconds(self, queue_length: int) -> float:
         """Estimate queue wait time in seconds."""
@@ -87,8 +68,7 @@ class WaitTimeEstimator:
 
         throughput = self.throughput_per_minute
         if throughput <= 0.0:
-            base = max(float(self._settings.cold_start_wait_seconds), 0.0)
-            return min(float(queue_length) * base, self._settings.max_wait_seconds)
+            return self._settings.max_wait_seconds
 
         wait_seconds = (float(queue_length) / throughput) * 60.0
         return min(wait_seconds, self._settings.max_wait_seconds)
