@@ -1,0 +1,41 @@
+flowchart LR
+    subgraph PI["Raspberry Pi Edge Node"]
+        STATE[Latest queue state<br/>length, wait, comfort, sensors]
+        SYNC[Hub Sync Agent<br/>runs every 2.5 s]
+        CACHE[Peer Site Cache<br/>nearby site status]
+        SQLITE[(SQLite<br/>QueueSnapshot<br/>PersonEvent<br/>PeerSiteSnapshot)]
+    end
+
+    subgraph CF["Cloudflare Workers"]
+        INGEST["POST /api/ingest<br/>authenticate X-Api-Key"]
+        SITES["GET /api/sites<br/>current site states"]
+        HISTORY["GET /api/history<br/>historical snapshots"]
+    end
+
+    D1[(Cloudflare D1<br/>site_status + site_snapshots)]
+    DASH[Dashboard Browser]
+
+    STATE -->|read latest status| SYNC
+    STATE -->|local snapshots<br/>person events| SQLITE
+    SYNC <-->|push local status JSON| INGEST
+    INGEST -->|upsert current<br/>insert snapshot| D1
+
+    SYNC <-->|pull peer sites| SITES
+    SITES -->|query current status| D1
+    SYNC -->|update| CACHE
+    SYNC -->|mirror pulled peers| SQLITE
+
+    DASH <-->|browse current queues| SITES
+    DASH <-->|request trend data| HISTORY
+    HISTORY -->|query snapshots| D1
+
+    classDef pi fill:#E7F0FF,stroke:#315C9B,color:#13294B
+    classDef worker fill:#F2ECFF,stroke:#6C47B8,color:#24133F
+    classDef data fill:#FFF4D6,stroke:#A66A00,color:#3F2600
+    classDef user fill:#E8F7EC,stroke:#3F8C55,color:#12351C
+
+    class STATE,SYNC,CACHE pi
+    class SQLITE data
+    class INGEST,SITES,HISTORY worker
+    class D1 data
+    class DASH user
