@@ -109,7 +109,7 @@ class CameraLoopRunner:
         )
         level = self._estimator.busyness_level(queue_length)
 
-        comfort_score, comfort_label = self._compute_comfort(wait_seconds)
+        comfort_score, comfort_label = self._compute_comfort()
 
         logger.debug(
             (
@@ -181,10 +181,9 @@ class CameraLoopRunner:
             self._estimator.add_event(event)
         return (time.monotonic() - started_at) * 1000.0
 
-    def _compute_comfort(self, wait_seconds: float) -> tuple[float, str]:
+    def _compute_comfort(self) -> tuple[float, str]:
         sensors_now = self._state.get_sensors()
         return compute_comfort_score(
-            wait_seconds=wait_seconds,
             temperature_c=sensors_now.temperature_c if sensors_now else None,
             humidity_pct=sensors_now.humidity_pct if sensors_now else None,
             pressure_hpa=sensors_now.pressure_hpa if sensors_now else None,

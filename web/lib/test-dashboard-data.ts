@@ -59,6 +59,28 @@ function jitter(center: number, spread: number): number {
   return center + randomBetween(-spread, spread)
 }
 
+function computeComfortScore(
+  temperatureC: number,
+  humidityPct: number,
+  pressureHpa: number
+): number {
+  const discomfortIndex =
+    temperatureC - (0.55 - 0.0055 * humidityPct) * (temperatureC - 14.5)
+  const discomfortPenalty = Math.min(
+    Math.max(0, discomfortIndex - 21) * 1.43,
+    20
+  )
+  const pressurePenalty = Math.min(Math.abs(pressureHpa - 1013) * 0.05, 5)
+
+  return Math.round(
+    clamp(
+      100 - discomfortPenalty - pressurePenalty + randomBetween(-3, 3),
+      70,
+      100
+    )
+  )
+}
+
 function buildBucketChartSnapshots(
   siteIds: string[],
   nowMs: number,
@@ -130,16 +152,10 @@ function buildBucketChartSnapshots(
         )
       )
 
-      const comfortScore = Math.round(
-        clamp(
-          86 -
-            queueLength * randomBetween(1.6, 2.5) -
-            Math.abs(temperatureC - 23) * randomBetween(1.2, 2.4) -
-            Math.abs(humidityPct - 55) * randomBetween(0.25, 0.7) +
-            randomBetween(-8, 8),
-          20,
-          96
-        )
+      const comfortScore = computeComfortScore(
+        temperatureC,
+        humidityPct,
+        pressureHpa
       )
 
       out.push({
@@ -229,16 +245,10 @@ function buildHistorySnapshots(
         )
       )
 
-      const comfortScore = Math.round(
-        clamp(
-          84 -
-            queueLength * randomBetween(1.7, 2.6) -
-            Math.abs(temperatureC - 23.5) * randomBetween(1.1, 2.2) -
-            Math.abs(humidityPct - 55) * randomBetween(0.25, 0.75) +
-            randomBetween(-10, 10),
-          18,
-          95
-        )
+      const comfortScore = computeComfortScore(
+        temperatureC,
+        humidityPct,
+        pressureHpa
       )
 
       out.push({

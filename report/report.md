@@ -18,9 +18,8 @@ three things:
 1. **Queue length** — how many people are currently standing in the line.
 2. **Estimated wait time** — derived from a rolling average of how long recent
    customers took to clear the zone.
-3. **Comfort score** — a combined index based on the expected wait and
-   environmental conditions (temperature, humidity, pressure) read from a
-   Sense HAT.
+3. **Comfort score** — an environmental index based on temperature, humidity,
+   and pressure read from a Sense HAT.
 
 Each edge node is self-contained, but when a hub URL is configured, several
 nodes can federate into a single **multi-site dashboard** hosted on
@@ -152,8 +151,7 @@ sync, preview HTTP server, and the camera loop.
    the `led_green_max` and `led_yellow_max` thresholds — the same taxonomy
    drives both the Sense HAT colour and the web badge.
 9. **Comfort score.** `analyzer/comfort.py` starts at 100 and subtracts a
-   "wait penalty" (proportional to `wait_seconds`) plus a capped
-   environmental penalty from the Discomfort Index
+   capped environmental penalty from the Discomfort Index
    `DI = T − (0.55 − 0.0055·RH)·(T − 14.5)` and pressure deviation from 1013
    hPa. The score is then labelled `comfortable / moderate / uncomfortable`.
 10. **Output.** The full `QueueStatusResponse` (queue length, wait, busyness,
