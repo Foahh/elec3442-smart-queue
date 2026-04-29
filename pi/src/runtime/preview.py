@@ -199,11 +199,6 @@ class PreviewRenderer:
         self._draw_roi_border(vis_frame)
         self._draw_zone(vis_frame)
         self._draw_persons(vis_frame, job.persons, job.in_zone_persons)
-        self._draw_status_overlay(
-            vis_frame,
-            job.status,
-            job.frame_time.strftime("%Y-%m-%d %H:%M:%S"),
-        )
 
         pw, ph = int(self._settings.preview_width), int(self._settings.preview_height)
         if self._resize_shape != (ph, pw):
@@ -211,6 +206,11 @@ class PreviewRenderer:
             self._resize_buf = np.empty((ph, pw, 3), dtype=np.uint8, order="C")
 
         cv2.resize(vis_frame, (pw, ph), dst=self._resize_buf)
+        self._draw_status_overlay(
+            self._resize_buf,
+            job.status,
+            job.frame_time.strftime("%Y-%m-%d %H:%M:%S"),
+        )
         ok, buf = cv2.imencode(
             ".jpg",
             self._resize_buf,
@@ -288,7 +288,8 @@ class PreviewRenderer:
         frame_timestamp: str,
     ) -> None:
         lines = [
-            f"Queue: {status.queue_length} | Wait: {status.estimated_wait_human}",
+            f"Queue: {status.queue_length}",
+            f"Wait: {status.estimated_wait_human}",
             f"Level: {status.busyness_level.upper()} | FPS: {status.effective_fps:.1f}",
             frame_timestamp,
         ]
@@ -296,12 +297,12 @@ class PreviewRenderer:
         margin = max(6, min(10, w_vis // 32))
         max_text_width = max(w_vis - (margin * 2), 1)
         font = cv2.FONT_HERSHEY_SIMPLEX
-        scale = 0.6
+        scale = 0.45
         for line in lines:
             width = cv2.getTextSize(line, font, scale, 1)[0][0]
             if width > max_text_width:
                 scale = min(scale, scale * (max_text_width / width))
-        scale = max(scale, 0.35)
+        scale = max(scale, 0.3)
         thickness = 1 if scale < 0.55 else 2
         line_height = max(
             cv2.getTextSize(line, font, scale, thickness)[0][1] for line in lines
