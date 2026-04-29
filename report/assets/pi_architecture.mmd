@@ -1,0 +1,35 @@
+flowchart LR
+    CAM[PiCamera2 / Video file]
+    SENSE[Sense HAT<br/>8x8 LED + sensors]
+
+    subgraph APP["smart-queue process"]
+        LOOP[Camera Loop]
+        DET[YOLO26 NCNN<br/>+ ByteTrack]
+        ZONE[Queue Zone<br/>Polygon Filter]
+        TRACK[Queue State<br/>Tracker]
+        EST[Wait Time<br/>Estimator]
+        COMF[Comfort Score]
+        PREV[MJPEG Preview<br/>HTTP Server]
+        HUB[Hub Sync<br/>Agent]
+        CACHE[(Peer Site Cache)]
+        DB[(SQLite<br/>queue.db)]
+    end
+
+    CAM -->|frames| LOOP
+    LOOP --> DET --> ZONE --> TRACK --> EST --> COMF
+    TRACK -->|events| DB
+    LOOP -->|snapshots| DB
+    LOOP -->|annotated frames| PREV
+    SENSE -->|T, RH, P| LOOP
+    LOOP -->|level, queue| SENSE
+    HUB <--> CACHE
+    HUB -->|local snapshots| DB
+    CACHE -->|peer context| LOOP
+
+    classDef hardware fill:#E7F0FF,stroke:#315C9B,color:#13294B
+    classDef process fill:#E8F7EC,stroke:#3F8C55,color:#12351C
+    classDef storage fill:#FFF4D6,stroke:#A66A00,color:#3F2600
+
+    class CAM,SENSE hardware
+    class LOOP,DET,ZONE,TRACK,EST,COMF,PREV,HUB process
+    class CACHE,DB storage

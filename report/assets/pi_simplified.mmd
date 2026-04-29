@@ -1,0 +1,41 @@
+---
+config:
+  layout: dagre
+---
+flowchart LR
+ subgraph APP["smart-queue process"]
+        LOOP["Camera Loop"]
+        DET["YOLO +<br> ByteTrack"]
+        ZONE["Queue<br>Filter"]
+        TRACK["Queue<br>Tracker"]
+        EST["Wait Time<br>Estimator"]
+        COMF["Comfort Score"]
+        PREV["MJPEG Preview<br>HTTP Server"]
+        HUB["Hub Sync<br>Agent"]
+        DB[("SQLite<br>queue.db")]
+  end
+    CAM["Camera / Video file"] -- frames --> LOOP
+    LOOP --> DET
+    DET --> ZONE
+    ZONE --> TRACK
+    TRACK --> EST
+    EST --> COMF
+    TRACK -- events --> DB
+    LOOP -- frames --> PREV
+    SENSE["Sense HAT"] -- temperature, humidity --> LOOP
+    HUB -- local snapshots --> DB
+   
+     LOOP:::process
+     DET:::process
+     ZONE:::process
+     TRACK:::process
+     EST:::process
+     COMF:::process
+     PREV:::process
+     HUB:::process
+     DB:::storage
+     CAM:::hardware
+     SENSE:::hardware
+    classDef hardware fill:#E7F0FF,stroke:#315C9B,color:#13294B
+    classDef process fill:#E8F7EC,stroke:#3F8C55,color:#12351C
+    classDef storage fill:#FFF4D6,stroke:#A66A00,color:#3F2600
