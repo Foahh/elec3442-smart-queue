@@ -287,25 +287,34 @@ class PreviewRenderer:
         status: "QueueStatusResponse",
         frame_timestamp: str,
     ) -> None:
-        status_text = (
-            f"Queue: {status.queue_length} | Wait: {status.estimated_wait_human} | "
-            f"Level: {status.busyness_level.upper()} | FPS: {status.effective_fps:.1f}"
-        )
-        cv2.putText(
-            vis_frame,
-            status_text,
-            (10, 30),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.7,
-            (255, 255, 255),
-            2,
-        )
-        cv2.putText(
-            vis_frame,
+        lines = [
+            f"Queue: {status.queue_length} | Wait: {status.estimated_wait_human}",
+            f"Level: {status.busyness_level.upper()} | FPS: {status.effective_fps:.1f}",
             frame_timestamp,
-            (10, 60),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,
-            (255, 255, 255),
-            1,
-        )
+        ]
+        h_vis, w_vis = vis_frame.shape[:2]
+        margin = max(6, min(10, w_vis // 32))
+        max_text_width = max(w_vis - (margin * 2), 1)
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        scale = 0.6
+        for line in lines:
+            width = cv2.getTextSize(line, font, scale, 1)[0][0]
+            if width > max_text_width:
+                scale = min(scale, scale * (max_text_width / width))
+        scale = max(scale, 0.35)
+        thickness = 1 if scale < 0.55 else 2
+        line_height = max(
+            cv2.getTextSize(line, font, scale, thickness)[0][1] for line in lines
+        ) + max(4, int(8 * scale))
+        y = margin + line_height
+        for line in lines:
+            cv2.putText(
+                vis_frame,
+                line,
+                (margin, min(y, max(h_vis - margin, margin))),
+                font,
+                scale,
+                (255, 255, 255),
+                thickness,
+            )
+            y += line_height
